@@ -1,0 +1,12 @@
+name: obsbot
+channels:
+  - pytorch
+  - defaults
+dependencies:
+  - python=3.8
+  - pytorch
+  - torchvision
+  - torchaudio
+  - cudatoolkit=11.3
+  - h5py
+  
