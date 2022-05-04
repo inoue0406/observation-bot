@@ -15,14 +15,6 @@ from utils import Logger
 from opts import parse_opts
 from loss_funcs import *    
 
-# trajGRU model
-from collections import OrderedDict
-from models_trajGRU.network_params_trajGRU import model_structure_convLSTM, model_structure_trajGRU
-from models_trajGRU.forecaster import Forecaster
-from models_trajGRU.encoder import Encoder
-from models_trajGRU.trajGRU import TrajGRU
-from models_trajGRU.convLSTM import ConvLSTM
-from models_trajGRU.loss import Weighted_mse_mae
 device = torch.device("cuda")
 
 def count_parameters(model,f):
@@ -63,17 +55,19 @@ if __name__ == '__main__':
 
     if opt.model_name == 'seq2seq':
         # lstm seq2seq model for the "Motion Estimator" component
-        INPUT_DIM = len(opt.pc_size) * 3 # The input is (X,Y,R)
-        OUTPUT_DIM = len(opt.pc_size) * 2 # The output is (X,Y)
+        INPUT_DIM = opt.pc_size * 3 # The input is (X,Y,R)
+        OUTPUT_DIM = opt.pc_size * 2 # The output is (X,Y)
         HID_DIM = 512
         N_LAYERS = 3
-        ENC_DROPOUT = 0.5
-        DEC_DROPOUT = 0.5
+        DROPOUT = 0.5
 
-        from models.seq2seq_lstm_ts import *
-        enc = Encoder(INPUT_DIM, HID_DIM, N_LAYERS, ENC_DROPOUT)
-        dec = Decoder(OUTPUT_DIM, HID_DIM, N_LAYERS, DEC_DROPOUT)
-        model = Seq2Seq(enc, dec, device='cuda').to(device)
+        # Observation Bot Model
+        from models.model_obsbot_seq2seq import obsbot_seq2seq, LSTMcell
+        lstm = LSTMcell(INPUT_DIM, HID_DIM, N_LAYERS, DROPOUT).to(device)
+        # initialize weights
+        for name, param in lstm.named_parameters():
+            nn.init.uniform_(param.data, -0.08, 0.08)
+        model = obsbot_seq2seq(lstm, opt.image_size, opt.pc_size, opt.batch_size, opt.model_mode, opt.interp_type).to(device)
 
     # Data Parallel Multi-GPU Run
     if torch.cuda.device_count() > 1:
@@ -149,6 +143,7 @@ if __name__ == '__main__':
 
         # Type of optimizers adam/rmsprop
         if opt.optimizer == 'adam':
+            import pdb;pdb.set_trace()
             optimizer = torch.optim.Adam(model.parameters(), lr=opt.learning_rate)
         elif opt.optimizer == 'rmsprop':
             optimizer = torch.optim.RMSprop(model.parameters(), lr=opt.learning_rate)

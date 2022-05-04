@@ -2,9 +2,12 @@ name: obsbot
 channels:
   - pytorch
   - defaults
+  - conda-forge
 dependencies:
   - python=3.8
+  - scipy
   - pytorch
+  - psutil
   - torchvision
   - torchaudio
   - cudatoolkit=11.3

@@ -26,18 +26,13 @@ def train_epoch(epoch,num_epochs,train_loader,model,loss_fn,optimizer,train_logg
     for i_batch, sample_batched in enumerate(train_loader):
         #print(i_batch, sample_batched['past'].size(),sample_batched['future'].size())
         input = Variable(scl.fwd(sample_batched['past'].float())).cuda()
-        target = Variable(scl.fwd(sample_batched['future'].float())).cuda()
+        target = input # set the input field as the target 
+        import pdb;pdb.set_trace()
         # Forward + Backward + Optimize
         optimizer.zero_grad()
         output = model(input)
-        # time decay coeff
-        b,t,c,h,w = output.shape
-        x = torch.linspace(0,opt.tdim_loss-1,steps=opt.tdim_loss).cuda()
-        rr = (opt.loss_decay)**x
-        rr = rr.unsqueeze(0).unsqueeze(2).unsqueeze(3).unsqueeze(4)
-        rr = rr.repeat(b,1,c,h,w)
         # use opt.tdim_loss steps
-        loss = loss_fn(output[:,0:opt.tdim_loss,:,:,:]*rr, target[:,0:opt.tdim_loss,:,:,:]*rr)
+        loss = loss_fn(output[:,0:opt.tdim_loss,:,:,:], target[:,0:opt.tdim_loss,:,:,:])
         # loss = loss_fn(output, target)
         loss.backward()
         optimizer.step()
