@@ -175,24 +175,24 @@ if __name__ == '__main__':
                 # save the trained model for every checkpoint
                 # (1) as binary 
                 #torch.save(model,os.path.join(opt.result_path,
-                #                                 'trained_CLSTM_epoch%03d.model' % epoch))
+                #                                 'trained_obsbot_epoch%03d.model' % epoch))
                 # (2) as state dictionary
                 torch.save(model.state_dict(),
                            os.path.join(opt.result_path,
-                                        'trained_CLSTM_epoch%03d.dict' % epoch))
+                                        'trained_obsbot_epoch%03d.dict' % epoch))
         # save the trained model
         # (1) as binary 
-        #torch.save(model,os.path.join(opt.result_path, 'trained_CLSTM.model'))
+        #torch.save(model,os.path.join(opt.result_path, 'trained_obsbot.model'))
         # (2) as state dictionary
         torch.save(model.state_dict(),
-                   os.path.join(opt.result_path, 'trained_CLSTM.dict'))
+                   os.path.join(opt.result_path, 'trained_obsbot.dict'))
 
     # test datasets if specified
     batch_size_test = 4
     if opt.test:
         if opt.no_train:
             #load pretrained model from results directory
-            model_fname = os.path.join(opt.result_path, 'trained_CLSTM.dict')
+            model_fname = os.path.join(opt.result_path, 'trained_obsbot.dict')
             print('loading pretrained model:',model_fname)
             # ###if the model is pickle
             #model_ld = torch.load(model_fname)
@@ -223,9 +223,7 @@ if __name__ == '__main__':
                                                    shuffle=False)
         
         # testing for the trained model
-        for threshold in opt.eval_threshold:
-            for stat_size in [200,160]:
-                test_CLSTM_EP(test_loader,model,loss_fn,opt,scl,threshold,stat_size)
+        test_epoch(test_loader,model,loss_fn,opt,scl)
 
     # output elapsed time
     logfile.write('End time: '+time.ctime()+'\n')

@@ -3,6 +3,7 @@
 # 
 import os
 import sys
+import gc
 
 import numpy as np
 import pandas as pd
@@ -129,7 +130,11 @@ def plot_field(out_field,pic_path,case):
         #plt.show()
         nt_str = '_dt%02d' % n
         plt.savefig(pic_path+'art_field_'+case+nt_str+'.png')
-        plt.close()
+        plt.cla() 
+        plt.clf()
+        plt.close("all")
+        gc.collect()
+
 
 def generate_rain_field(v,scale,volume,num,out_dir):
     # initial values

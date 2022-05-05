@@ -98,19 +98,11 @@ def valid_epoch(epoch,num_epochs,valid_loader,model,loss_fn,valid_logger,opt,scl
 # Test
 # --------------------------
 
-def test_CLSTM_EP(test_loader,model,loss_fn,opt,scl,threshold,stat_size):
+def test_epoch(test_loader,model,loss_fn,opt,scl):
     print('Testing for the model')
     
     # initialize
-    SumSE_all = np.empty((0,opt.tdim_use),float)
-    hit_all = np.empty((0,opt.tdim_use),float)
-    miss_all = np.empty((0,opt.tdim_use),float)
-    falarm_all = np.empty((0,opt.tdim_use),float)
-    m_xy_all = np.empty((0,opt.tdim_use),float)
-    m_xx_all = np.empty((0,opt.tdim_use),float)
-    m_yy_all = np.empty((0,opt.tdim_use),float)
-    MaxSE_all = np.empty((0,opt.tdim_use),float)
-    FSS_t_all = np.empty((0,opt.tdim_use),float)
+    MSE_all = np.empty((0,opt.tdim_use),float)
 
     # evaluation mode
     model.eval()
@@ -126,46 +118,16 @@ def test_CLSTM_EP(test_loader,model,loss_fn,opt,scl,threshold,stat_size):
         # apply evaluation metric
         Xtrue = scl.inv(target.data.cpu().numpy())
         Xmodel = scl.inv(output.data.cpu().numpy())
-        # take stat for the middle of the region based on stat_size
-        i1 = int((Xtrue.shape[3] - stat_size)/2)
-        i2 = i1 + stat_size
-        print("i1,i2=",i1,i2)
-        Xtrue = Xtrue[:,:,:,i1:i2,i1:i2]
-        Xmodel = Xmodel[:,:,:,i1:i2,i1:i2]
-        SumSE,hit,miss,falarm,m_xy,m_xx,m_yy,MaxSE = StatRainfall(Xtrue,Xmodel,
-                                                                  th=threshold)
-        FSS_t = FSS_for_tensor(Xtrue,Xmodel,th=threshold,win=10)
-        
-        SumSE_all = np.append(SumSE_all,SumSE,axis=0)
-        hit_all = np.append(hit_all,hit,axis=0)
-        miss_all = np.append(miss_all,miss,axis=0)
-        falarm_all = np.append(falarm_all,falarm,axis=0)
-        m_xy_all = np.append(m_xy_all,m_xy,axis=0)
-        m_xx_all = np.append(m_xx_all,m_xx,axis=0)
-        m_yy_all = np.append(m_yy_all,m_yy,axis=0)
-        MaxSE_all = np.append(MaxSE_all,MaxSE,axis=0)
-        FSS_t_all = np.append(FSS_t_all,FSS_t,axis=0)
-        
-        #if (i_batch+1) % 100 == 0:
+
         if (i_batch+1) % 1 == 0:
             print ('Test Iter [%d/%d] Loss: %.4e' 
                    %(i_batch+1, len(test_loader.dataset)//test_loader.batch_size, loss.item()))
-    # logging for epoch-averaged loss
-    RMSE,CSI,FAR,POD,Cor,MaxMSE,FSS_mean = MetricRainfall(SumSE_all,hit_all,miss_all,falarm_all,
-                                                          m_xy_all,m_xx_all,m_yy_all,
-                                                          MaxSE_all,FSS_t_all,axis=(0))
     # save evaluated metric as csv file
     tpred = (np.arange(opt.tdim_use)+1.0)*5.0 # in minutes
     # import pdb; pdb.set_trace()
     df = pd.DataFrame({'tpred_min':tpred,
-                       'RMSE':RMSE,
-                       'CSI':CSI,
-                       'FAR':FAR,
-                       'POD':POD,
-                       'Cor':Cor,
-                       'MaxMSE': MaxMSE,
-                       'FSS_mean': FSS_mean})
-    fname = 'test_evaluation_predtime_%s_%d_%.2f.csv' % (opt.test_tail,stat_size,threshold)
+                       'MSE': MSE})
+    fname = 'test_evaluation_predtime.csv' % (opt.test_tail)
     df.to_csv(os.path.join(opt.result_path,fname), float_format='%.3f')
     # free gpu memory
     del input,target,output,loss
