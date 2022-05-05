@@ -12,4 +12,5 @@ dependencies:
   - torchaudio
   - cudatoolkit=11.3
   - h5py
+  - gpy
   

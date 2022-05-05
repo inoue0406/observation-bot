@@ -12,7 +12,7 @@ python ../src/main_obsbot.py --model_name seq2seq\
        --test --eval_threshold 0.5 10 20 --test_path ../data/valid_simple_JMARadar.csv \
        --result_path $case --tdim_use 12 --tdim_loss 12 --learning_rate 0.0001 --lr_decay 0.9 \
        --batch_size 2 --n_epochs 20 --n_threads 4 --checkpoint 10 \
-       --loss_function MultiMSE --loss_weights 1.0 0.05 0.0125 0.0025\
+       --loss_function MSE\
        --interp_type nearest_kdtree\
        --optimizer adam \
        --transfer_path None
