@@ -1,11 +1,7 @@
 from torch import nn
-import torch.nn.functional as F
 import torch
-from models_trajGRU.utils import make_layers
 
 import numpy as np
-
-from nearest_neighbor_interp_kdtree import nearest_neighbor_interp_kd
 
 def xy_grid(height,width):
     # generate constant xy grid
@@ -113,7 +109,7 @@ def pc_to_grid_nearest_id(R_pc,XY_pc,XY_grd,index,interpolator_back):
     return R_grd
 
 class LSTMcell(nn.Module):
-    def __init__(self, input_dim, hid_dim, n_layers, dropout):
+    def __init__(self, input_dim, output_dim, hid_dim, n_layers, dropout):
         super().__init__()
         
         self.hid_dim = hid_dim
@@ -121,7 +117,10 @@ class LSTMcell(nn.Module):
         
         self.rnn = nn.LSTM(input_dim, hid_dim, n_layers, dropout = dropout,
                            batch_first=True)
-        
+
+        # linear layer for converting hidden dim to output dim
+        self.fc_out = nn.Linear(hid_dim,output_dim)
+
         self.dropout = nn.Dropout(dropout)
         
     def forward(self, in_seq):
@@ -130,15 +129,17 @@ class LSTMcell(nn.Module):
         
         in_seq = self.dropout(in_seq)
         
-        outputs, (hidden, cell) = self.rnn(in_seq)
+        rnn_out, (hidden, cell) = self.rnn(in_seq)
         
         #outputs = [in_seq len, batch size, hid dim * n directions]
         #hidden = [n layers * n directions, batch size, hid dim]
         #cell = [n layers * n directions, batch size, hid dim]
+
+        outputs = self.fc_out(rnn_out)
         
         #outputs are always from the top hidden layer
 
-        return hidden, cell
+        return outputs
 
 class obsbot_seq2seq(nn.Module):
     # Main Class for the Observation Bot
@@ -215,7 +216,9 @@ class obsbot_seq2seq(nn.Module):
             # -----------------------------------------------
             # (2) Motion Estimator: Predict Single Time Step with RNNs
             # R_pc,hidden = Predict(XY_pc,R_pc,hidden)
-            R_pc =self.lstm(R_pc)
+            XYR_pc = torch.cat([XY_pc,R_pc],dim=1).reshape(bsize,self.npc*3)
+            dXY = self.lstm(XYR_pc)
+            XY_pc = XY_pc + dXY.reshape(bsize,2,self.npc)
 
             # -----------------------------------------------
             # (3) Field Estimator : Estimate Field Value from point observation

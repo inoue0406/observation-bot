@@ -27,7 +27,6 @@ def train_epoch(epoch,num_epochs,train_loader,model,loss_fn,optimizer,train_logg
         #print(i_batch, sample_batched['past'].size(),sample_batched['future'].size())
         input = Variable(scl.fwd(sample_batched['past'].float())).cuda()
         target = input # set the input field as the target 
-        import pdb;pdb.set_trace()
         # Forward + Backward + Optimize
         optimizer.zero_grad()
         output = model(input)

@@ -55,15 +55,15 @@ if __name__ == '__main__':
 
     if opt.model_name == 'seq2seq':
         # lstm seq2seq model for the "Motion Estimator" component
-        INPUT_DIM = opt.pc_size * 3 # The input is (X,Y,R)
-        OUTPUT_DIM = opt.pc_size * 2 # The output is (X,Y)
+        INPUT_DIM = (opt.pc_size**2) * 3 # The input is (X,Y,R)
+        OUTPUT_DIM = (opt.pc_size**2) * 2 # The output is (X,Y)
         HID_DIM = 512
         N_LAYERS = 3
         DROPOUT = 0.5
 
         # Observation Bot Model
         from models.model_obsbot_seq2seq import obsbot_seq2seq, LSTMcell
-        lstm = LSTMcell(INPUT_DIM, HID_DIM, N_LAYERS, DROPOUT).to(device)
+        lstm = LSTMcell(INPUT_DIM, OUTPUT_DIM, HID_DIM, N_LAYERS, DROPOUT).to(device)
         # initialize weights
         for name, param in lstm.named_parameters():
             nn.init.uniform_(param.data, -0.08, 0.08)
@@ -143,7 +143,6 @@ if __name__ == '__main__':
 
         # Type of optimizers adam/rmsprop
         if opt.optimizer == 'adam':
-            import pdb;pdb.set_trace()
             optimizer = torch.optim.Adam(model.parameters(), lr=opt.learning_rate)
         elif opt.optimizer == 'rmsprop':
             optimizer = torch.optim.RMSprop(model.parameters(), lr=opt.learning_rate)
