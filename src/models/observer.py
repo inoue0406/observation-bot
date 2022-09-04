@@ -7,7 +7,7 @@ from torch import nn
 import torch
 import numpy as np
 
-class observer_obsbot_interp_2d(nn.Module):
+class observer_interp2d(nn.Module):
     """Summary line.
 
     This is the "interpolation type" observer, which obtaines observed quantities
@@ -54,4 +54,36 @@ class observer_obsbot_interp_2d(nn.Module):
             R_pc = grid_to_pc_nearest_id(R[:,:,:,:],XY_pc,XY_grd,self.faiss_index,self.interpolator_fwd)
 
         return R_pc
+
+class observer_conv(nn.Module):
+    """Summary line.
+
+    This is a "CNN" type observer, which obtaines observed quantities
+    by performing convolution operations to the true field.
+    """
+    # Main Class for the Observation Bot
+
+    def __init__(self, interp_type):
+        """Initialization.
+
+        Args:
+            interp_type (str): type of interpolation algorithm
+        """
+        super().__init__()
+ 
+    def forward(self, R, XY_pc):
+        """sum 2 values.
+
+        Args:
+            R (torch.Tensor): The ground truth input field with [batch,channels,height,width] dimensions.
+            XY_pc (torch.Tensor): The 2-d location of observation bots with [batch,2,N] dimensions,
+                                   where N is the number of bots.
+
+        Returns:
+            R_pc (torch.Tensor): Interpolated field value at locations specified by XY_pc with 
+                                  [batch,channels,N] dimensions.
+
+        """
+
+        return None
 

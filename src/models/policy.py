@@ -7,10 +7,11 @@ from torch import nn
 import torch
 import numpy as np
 
-class policy_obsbot(nn.Module):
+class policy_lstm(nn.Module):
     """Summary line.
 
-    This is policy_obsbot.
+    This type policy (motion estimator) utilizes (non-convolutional) LSTM.
+    
     """
 
     def __init__(self, ):
