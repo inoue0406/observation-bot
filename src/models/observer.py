@@ -7,6 +7,8 @@ from torch import nn
 import torch
 import numpy as np
 
+from interp_funcs import grid_to_pc,grid_to_pc_nearest,grid_to_pc_nearest_id
+
 class observer_interp2d(nn.Module):
     """Summary line.
 
@@ -33,7 +35,7 @@ class observer_interp2d(nn.Module):
             self.interpolator = nearest_neighbor_interp_kd
  
     def forward(self, R, XY_pc):
-        """sum 2 values.
+        """Forward.
 
         Args:
             R (torch.Tensor): The ground truth input field with [batch,channels,height,width] dimensions.
@@ -45,7 +47,7 @@ class observer_interp2d(nn.Module):
                                   [batch,channels,N] dimensions.
 
         """
-        
+
         if self.interp_type == "bilinear":
             R_pc = grid_to_pc(R[:,:,:,:],XY_pc)
         elif self.interp_type == "nearest_normal" or self.interp_type == "nearest_kdtree":

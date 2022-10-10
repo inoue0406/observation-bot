@@ -15,6 +15,13 @@ from utils import Logger
 from opts import parse_opts
 from loss_funcs import *    
 
+from models.model_obsbot import obsbot
+
+# Import Observer/Policy/Predictor classes.
+from models.observer import observer_interp2d
+from models.policy import policy_lstm
+from models.predictor import predictor_interp2d
+
 device = torch.device("cuda")
 
 def count_parameters(model,f):
@@ -53,21 +60,14 @@ if __name__ == '__main__':
             # use identity transformation, since the data is already scaled
             scl = LinearScaler(rmax=1.0)
 
+    # initialize Observer/Policy/Predictor instance
     if opt.model_name == 'seq2seq':
-        # lstm seq2seq model for the "Motion Estimator" component
-        INPUT_DIM = (opt.pc_size**2) * 3 # The input is (X,Y,R)
-        OUTPUT_DIM = (opt.pc_size**2) * 2 # The output is (X,Y)
-        HID_DIM = 512
-        N_LAYERS = 3
-        DROPOUT = 0.5
 
-        # Observation Bot Model
-        from models.model_obsbot_seq2seq import obsbot_seq2seq, LSTMcell
-        lstm = LSTMcell(INPUT_DIM, OUTPUT_DIM, HID_DIM, N_LAYERS, DROPOUT).to(device)
-        # initialize weights
-        for name, param in lstm.named_parameters():
-            nn.init.uniform_(param.data, -0.08, 0.08)
-        model = obsbot_seq2seq(lstm, opt.image_size, opt.pc_size, opt.batch_size, opt.model_mode, opt.interp_type).to(device)
+        model = obsbot_seq2seq(opt.image_size,
+                               opt.pc_size, 
+                               opt.batch_size,
+                               opt.model_mode,
+                               opt.interp_type).to(device)
 
     # Data Parallel Multi-GPU Run
     if torch.cuda.device_count() > 1:
