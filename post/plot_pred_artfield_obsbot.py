@@ -26,7 +26,7 @@ from scaler import *
 from train_valid_epoch import *
 
 # Observation Bot Model
-from models.model_obsbot_seq2seq import obsbot_seq2seq, LSTMcell
+from models.model_obsbot import obsbot
 
 device = torch.device("cuda")
 
@@ -67,8 +67,12 @@ def plot_comp_prediction(data_path,filelist,model_fname,batch_size,tdim_use,
     DROPOUT = 0.5
     model_mode = "check"
 
-    lstm = LSTMcell(INPUT_DIM, OUTPUT_DIM, HID_DIM, N_LAYERS, DROPOUT).to(device)
-    model = obsbot_seq2seq(lstm, img_size, pc_size, batch_size, model_mode, interp_type).to(device)
+    model = obsbot(img_size,
+                   pc_size, 
+                   batch_size,
+                   model_mode,
+                   interp_type).to(device)
+
     model.load_state_dict(torch.load(model_fname))
 
     # evaluation mode
