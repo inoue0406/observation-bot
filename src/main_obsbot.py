@@ -5,7 +5,6 @@ import torchvision
 import pandas as pd
 import h5py
 import os
-import sys
 import json
 import time
 
@@ -30,13 +29,14 @@ if __name__ == '__main__':
    
     # parse command-line options
     opt = parse_opts()
-    print(opt)
+    print(json.dumps(vars(opt), indent=2))
     # create result dir
     if not os.path.exists(opt.result_path):
         os.mkdir(opt.result_path)
     
     with open(os.path.join(opt.result_path, 'opts.json'), 'w') as opt_file:
-        json.dump(vars(opt), opt_file)
+        opt_file.write(json.dumps(vars(opt), indent=2))
+    import pdb; pdb.set_trace()
 
     # generic log file
     logfile = open(os.path.join(opt.result_path, 'log_run.txt'),'w')
