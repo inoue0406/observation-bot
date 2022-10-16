@@ -36,7 +36,6 @@ if __name__ == '__main__':
     
     with open(os.path.join(opt.result_path, 'opts.json'), 'w') as opt_file:
         opt_file.write(json.dumps(vars(opt), indent=2))
-    import pdb; pdb.set_trace()
 
     # generic log file
     logfile = open(os.path.join(opt.result_path, 'log_run.txt'),'w')

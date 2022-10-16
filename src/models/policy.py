@@ -43,9 +43,10 @@ class policy_lstm(nn.Module):
             XY_pc (torch.Tensor): The next location of observation bots with [batch,2,N] dimensions.
 
         """
+        ratio = 0.1
         
         XYR_pc = torch.cat([XY_pc,R_pc],dim=1).reshape(bsize,self.npc*3)
-        dXY = self.lstm(XYR_pc)
+        dXY = self.lstm(XYR_pc) * ratio
         XY_pc_nxt = XY_pc + dXY.reshape(bsize,2,self.npc)
 
         return XY_pc_nxt
