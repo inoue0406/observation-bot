@@ -7,7 +7,8 @@ from torch import nn
 import torch
 import numpy as np
 
-from interp_funcs import grid_to_pc,grid_to_pc_nearest,grid_to_pc_nearest_id
+# Import interpolation tool.
+from models.interp_funcs import grid_to_pc,grid_to_pc_nearest,grid_to_pc_nearest_id
 
 class observer_interp2d(nn.Module):
     """Summary line.
@@ -34,13 +35,14 @@ class observer_interp2d(nn.Module):
             from nearest_neighbor_interp_kdtree import nearest_neighbor_interp_kd
             self.interpolator = nearest_neighbor_interp_kd
  
-    def forward(self, R, XY_pc):
+    def forward(self, R, XY_pc, XY_grd):
         """Forward.
 
         Args:
             R (torch.Tensor): The ground truth input field with [batch,channels,height,width] dimensions.
             XY_pc (torch.Tensor): The 2-d location of observation bots with [batch,2,N] dimensions,
                                    where N is the number of bots.
+            xy_grd (torch.Tensor) : The regular grid with [x,y,2] dimensions.
 
         Returns:
             R_pc (torch.Tensor): Interpolated field value at locations specified by XY_pc with 

@@ -3,11 +3,12 @@
 This is predictor.py.
 """
 
+from torch import nn
 import torch 
 import torchvision
 import numpy as np
 
-from interp_funcs import pc_to_grid,pc_to_grid_nearest,pc_to_grid_nearest_id
+from models.interp_funcs import pc_to_grid,pc_to_grid_nearest,pc_to_grid_nearest_id
 
 class predictor_interp2d(nn.Module):
     """Summary line.
@@ -16,8 +17,14 @@ class predictor_interp2d(nn.Module):
     estimate underlying input field.
     """
 
-    def __init__(self, ):
+    def __init__(self, interp_type):
+        """Initialization.
+
+        Args:
+            interp_type (str): type of interpolation algorithm
+        """
         super().__init__()
+
         self.interp_type = interp_type
         # import according to interp type
         if interp_type == "nearest_normal":
@@ -27,14 +34,15 @@ class predictor_interp2d(nn.Module):
             from nearest_neighbor_interp_kdtree import nearest_neighbor_interp_kd
             self.interpolator = nearest_neighbor_interp_kd
  
-    def forward(self, R_pc, XY_pc):
-        """Forward.
+    def forward(self, R_pc, XY_pc, XY_grd):
+        """Forward. 
 
         Args:
             R_pc (torch.Tensor): Field value at locations specified by XY_pc with 
                                   [batch,channels,N] dimensions.
             XY_pc (torch.Tensor): The 2-d location of observation bots with [batch,2,N] dimensions,
                                    where N is the number of bots.
+            xy_grd (torch.Tensor) : The regular grid with [x,y,2] dimensions.
 
         Returns:
             R_grd (torch.Tensor): Interpolated field with [batch,channels,height,width] dimensions.
@@ -48,10 +56,7 @@ class predictor_interp2d(nn.Module):
         elif self.interp_type == "nearest_faiss":
             R_grd = pc_to_grid_nearest_id(R_pc,XY_pc,XY_grd,self.faiss_index,self.interpolator_back)
 
-
-        # Lagrangian prediction
-        R_grd = input[:,0,:,:,:] #use initial
-
+        return R_grd
 
 class predictor_deconv(nn.Module):
     """Summary line.
@@ -75,7 +80,7 @@ class predictor_deconv(nn.Module):
             float: summation
 
         """
-    return None
+        return None
 
 class predictor_convlstm(nn.Module):
     """Summary line.
@@ -105,4 +110,4 @@ class predictor_convlstm(nn.Module):
         # Lagrangian prediction
         R_grd = input[:,0,:,:,:] #use initial
 
-    return None
+        return None

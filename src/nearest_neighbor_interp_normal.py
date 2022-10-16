@@ -104,6 +104,4 @@ if __name__ == '__main__':
     R_grd_b = nearest_neighbor_interp(xy_grd_b,xy_pc_b,RR_pc_b)
     
     #R_grd_b2 = nearest_neighbor_interp_kd(xy_grd_b,xy_pc_b,RR_pc_b)
-    
-    import pdb;pdb.set_trace()
-    
+        

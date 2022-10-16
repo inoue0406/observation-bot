@@ -14,9 +14,10 @@ class policy_lstm(nn.Module):
     
     """
 
-    def __init__(self, pc_size):
+    def __init__(self, pc_size, npc):
         super().__init__()
 
+        self.npc = npc
         # lstm seq2seq model for the "Motion Estimator" component
         INPUT_DIM = (pc_size**2) * 3 # The input is (X,Y,R)
         OUTPUT_DIM = (pc_size**2) * 2 # The output is (X,Y)
@@ -30,23 +31,24 @@ class policy_lstm(nn.Module):
         for name, param in self.lstm.named_parameters():
             nn.init.uniform_(param.data, -0.08, 0.08)
 
-    def forward(self, input):
-        """sum 2 values.
+    def forward(self, XY_pc, R_pc, bsize):
+        """Predict Single Time Step with RNNs.
 
         Args:
-            x (float): 1st argument
-            y (float): 2nd argument
-
+            XY_pc (torch.Tensor): The 2-d location of observation bots with [batch,2,N] dimensions,
+                                   where N is the number of bots.
+            R_pc (torch.Tensor): Interpolated field value at locations specified by XY_pc with 
+                                  [batch,channels,N] dimensions.
         Returns:
-            float: summation
+            XY_pc (torch.Tensor): The next location of observation bots with [batch,2,N] dimensions.
 
         """
         
-        bsize, tsize, channels, height, width = input.size()
+        XYR_pc = torch.cat([XY_pc,R_pc],dim=1).reshape(bsize,self.npc*3)
+        dXY = self.lstm(XYR_pc)
+        XY_pc_nxt = XY_pc + dXY.reshape(bsize,2,self.npc)
 
-        # Lagrangian prediction
-        R_grd = input[:,0,:,:,:] #use initial
-
+        return XY_pc_nxt
 
 class LSTMcell(nn.Module):
     def __init__(self, input_dim, output_dim, hid_dim, n_layers, dropout):

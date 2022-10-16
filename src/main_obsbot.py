@@ -17,11 +17,6 @@ from loss_funcs import *
 
 from models.model_obsbot import obsbot
 
-# Import Observer/Policy/Predictor classes.
-from models.observer import observer_interp2d
-from models.policy import policy_lstm
-from models.predictor import predictor_interp2d
-
 device = torch.device("cuda")
 
 def count_parameters(model,f):
@@ -63,11 +58,11 @@ if __name__ == '__main__':
     # initialize Observer/Policy/Predictor instance
     if opt.model_name == 'seq2seq':
 
-        model = obsbot_seq2seq(opt.image_size,
-                               opt.pc_size, 
-                               opt.batch_size,
-                               opt.model_mode,
-                               opt.interp_type).to(device)
+        model = obsbot(opt.image_size,
+                       opt.pc_size, 
+                       opt.batch_size,
+                       opt.model_mode,
+                       opt.interp_type).to(device)
 
     # Data Parallel Multi-GPU Run
     if torch.cuda.device_count() > 1:

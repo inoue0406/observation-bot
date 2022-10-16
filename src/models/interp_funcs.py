@@ -3,6 +3,22 @@ import torch
 
 import numpy as np
 
+def grid_to_pc(R_grd,XY_pc):
+    # convert grid to pc
+    # R_grd: grid value with [batch,channels,height,width] dim
+    # XY_pc: point cloud position with [batch,2,N] dim
+    #        scaled to [0,1]
+    B, _, N = XY_pc.size()
+    _, C, _, _ = R_grd.size()
+    input = R_grd
+    L = int(np.sqrt(N)) # note that sqrt(N) should be an integer
+    vgrid = XY_pc.permute(0, 2, 1).reshape(B, L, L, 2).cuda()
+    # rescale grid to [-1,1]
+    vgrid = (vgrid - 0.5) * 2.0
+    R_pc = torch.nn.functional.grid_sample(input, vgrid)
+    R_pc = R_pc.reshape(B, C, N)
+    return R_pc
+
 def grid_to_pc_nearest(R_grd,XY_pc,XY_grd,interp_type,interpolator):
     # convert grid to pc
     # R_grd: grid value with [batch,channels,height,width] dim

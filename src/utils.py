@@ -52,7 +52,6 @@ def log_freq_distr_pytorch(x,fname):
     hist_df= pd.DataFrame({"value":hist[1][1:],
                            "count":hist[0]})
     hist_df.to_csv(fname)
-    import pdb;pdb.set_trace()
 
 
     

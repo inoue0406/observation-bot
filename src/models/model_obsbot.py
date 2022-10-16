@@ -2,13 +2,18 @@ from torch import nn
 import torch
 import numpy as np
 
+# Import Observer/Policy/Predictor classes.
+from models.observer import observer_interp2d
+from models.policy import policy_lstm
+from models.predictor import predictor_interp2d
+
 class obsbot(nn.Module):
     # Main Class for the Observation Bot
 
     def __init__(self, image_size, pc_size, batch_size,
                  mode="run", interp_type="bilinear"):
         super().__init__()
-        
+
         # set regular grid
         self.Xgrid,self.Ygrid = self.xy_grid(image_size,image_size)
         # set pc grid
@@ -20,9 +25,9 @@ class obsbot(nn.Module):
         self.interp_type = interp_type
 
         # Initialize observer/policy/predictor networks
-        self.observer = observer_interp2d()
-        self.policy = policy_lstm(pc_size)
-        self.predictor = predictor_interp2d()
+        self.observer = observer_interp2d(interp_type)
+        self.policy = policy_lstm(pc_size, self.npc)
+        self.predictor = predictor_interp2d(interp_type)
 
     def xy_grid(self,height,width):
         # generate constant xy grid
@@ -66,17 +71,15 @@ class obsbot(nn.Module):
         for it in range(tsize):
             # ----------------------------------------------------------
             # (1) Observation: Interpolate UV to Point Cloud position.
-            R_pc = self.observer(input[:,it,:,:,:],XY_pc) 
+            R_pc = self.observer(input[:,it,:,:,:],XY_pc,XY_grd) 
 
             # ----------------------------------------------------------
             # (2) Field Estimator : Estimate Field Value from point observation.
-            R_grd = self.predictor(R_pc,XY_pc)
+            R_grd = self.predictor(R_pc,XY_pc,XY_grd)
 
             # ----------------------------------------------------------
             # (3) Motion Estimator: Predict Single Time Step with RNNs.
-            XYR_pc = torch.cat([XY_pc,R_pc],dim=1).reshape(bsize,self.npc*3)
-            dXY = self.policy(XYR_pc)
-            XY_pc = XY_pc + dXY.reshape(bsize,2,self.npc)
+            XY_pc = self.policy(XY_pc, R_pc, bsize)
 
             xout[:,it,:,:,:] = R_grd
             if self.mode == "check":
