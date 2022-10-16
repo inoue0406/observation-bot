@@ -39,7 +39,21 @@ def plot_field(X,title,png_fpath,vmin=0,vmax=1):
     plt.show()
     plt.savefig(png_fpath)
     plt.close()
-    
+
+# plot field and point cloud together
+def plot_field_pc(R,x,y,r,title,png_fpath,vmin=0,vmax=1):
+    # clip xy in [0,1] range
+    x_plt = np.clip(x,0,1)*R.shape[0]
+    y_plt = np.clip(y,0,1)*R.shape[1]
+    plt.imshow(R,vmin=vmin,vmax=vmax,cmap="GnBu",origin='lower')
+    plt.scatter(x_plt, y_plt, c=r, cmap="GnBu", edgecolors="black")
+    plt.colorbar()
+    plt.grid()
+    plt.title(title)
+    plt.show()
+    plt.savefig(png_fpath)
+    plt.close()
+
 # plot comparison of predicted vs ground truth
 def plot_comp_prediction(data_path,filelist,model_fname,batch_size,tdim_use,
                          pic_path,scl,case,img_size,interp_type,mode='png_whole'):
@@ -93,6 +107,10 @@ def plot_comp_prediction(data_path,filelist,model_fname,batch_size,tdim_use,
             pic_tg = scl.inv(pic.data.numpy())
             pic = output[n,:,0,:,:].cpu()
             pic_pred = scl.inv(pic.data.numpy())
+            # extract point clout xy and value
+            x_pc = xy_pc_out[n,:,0,:].detach().cpu().numpy()
+            y_pc = xy_pc_out[n,:,1,:].detach().cpu().numpy()
+            r_pc = r_pc_out[n,:,0,:].detach().cpu().numpy()
             # print
             print('Plotting: ',fname,np.max(pic_tg),np.max(pic_pred))
             
@@ -104,7 +122,7 @@ def plot_comp_prediction(data_path,filelist,model_fname,batch_size,tdim_use,
                                   fname+' ground truth:'+nt_str,png_fpath)
                 # plot UV
                 png_fpath = pic_path+'comp_pred_'+str(n)+'_pred'+nt_str+'.png'
-                plot_field(pic_pred[nt,:,:],
+                plot_field_pc(pic_pred[nt,:,:],x_pc[nt,:],y_pc[nt,:],r_pc[nt,:],
                                   fname+' model prediction:'+nt_str,png_fpath)
         # free GPU memory (* This seems to be necessary if going without backprop)
         del input,target,output
