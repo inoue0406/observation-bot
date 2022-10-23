@@ -11,13 +11,23 @@ class obsbot(nn.Module):
     # Main Class for the Observation Bot
 
     def __init__(self, image_size, pc_size, batch_size,
-                 mode="run", interp_type="bilinear"):
+                 mode="run", interp_type="bilinear", pc_initialize="regular"):
         super().__init__()
 
         # set regular grid
         self.Xgrid,self.Ygrid = self.xy_grid(image_size,image_size)
         # set pc grid
-        self.Xpc,self.Ypc = self.xy_grid(pc_size,pc_size)
+        if pc_initialize=="regular":
+            # regular grid
+            self.Xpc,self.Ypc = self.xy_grid(pc_size,pc_size)
+            # 2d to 1d variable
+            self.Xpc = self.Xpc.flatten()
+            self.Ypc = self.Ypc.flatten()
+        elif pc_initialize=="random":
+            # random point initialization
+            self.Xpc = torch.rand(pc_size*pc_size)
+            self.Ypc = torch.rand(pc_size*pc_size)
+
         # number of point cloud
         self.npc = pc_size*pc_size
         # mode
@@ -30,7 +40,7 @@ class obsbot(nn.Module):
         self.predictor = predictor_interp2d(interp_type)
 
     def xy_grid(self,height,width):
-        # generate constant xy grid
+        # generate constant xy grid in [0,1] range
         x1grd = torch.linspace(0,1,width).cuda() # 1d grid
         y1grd = torch.linspace(0,1,height).cuda() # 1d grid
 
@@ -61,7 +71,6 @@ class obsbot(nn.Module):
         X_pc = torch.stack(bsize*[self.Xpc]).unsqueeze(1)
         Y_pc = torch.stack(bsize*[self.Ypc]).unsqueeze(1)
         XY_pc = torch.cat([X_pc,Y_pc],dim=1).cuda()
-        XY_pc = XY_pc.clone().reshape(bsize,2,self.npc)
 
         xout = torch.zeros(bsize, tsize, channels, height, width,  requires_grad=True).cuda()
         if self.mode == "check":

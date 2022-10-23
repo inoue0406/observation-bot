@@ -61,7 +61,8 @@ if __name__ == '__main__':
                        opt.pc_size, 
                        opt.batch_size,
                        opt.model_mode,
-                       opt.interp_type).to(device)
+                       opt.interp_type,
+                       opt.pc_initialize).to(device)
 
     # Data Parallel Multi-GPU Run
     if torch.cuda.device_count() > 1:

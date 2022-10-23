@@ -39,6 +39,11 @@ def parse_opts():
         type=int,
         help='size of point cloud height and width')
     parser.add_argument(
+        '--pc_initialize',
+        default='regular',
+        type=str,
+        help='point cloud initialization: regular / random')
+    parser.add_argument(
         '--train_path',
         type=str,
         help='training filelist(csv) path')
