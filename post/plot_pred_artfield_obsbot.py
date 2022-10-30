@@ -46,8 +46,11 @@ def plot_field_pc(R,x,y,r,title,png_fpath,vmin=0,vmax=1):
     x_plt = np.clip(x,0,1)*R.shape[0]
     y_plt = np.clip(y,0,1)*R.shape[1]
     plt.imshow(R,vmin=vmin,vmax=vmax,cmap="GnBu",origin='lower')
-    plt.scatter(x_plt, y_plt, c=r, cmap="GnBu", edgecolors="black")
     plt.colorbar()
+    plt.scatter(x_plt, y_plt, c=r, cmap="GnBu", edgecolors="black")
+    # set axes range
+    plt.xlim(0, R.shape[0])
+    plt.ylim(0, R.shape[1])
     plt.grid()
     plt.title(title)
     plt.show()
@@ -80,12 +83,14 @@ def plot_comp_prediction(data_path,filelist,model_fname,batch_size,tdim_use,
     N_LAYERS = 3
     DROPOUT = 0.5
     model_mode = "check"
+    pc_initialize = "random"
 
     model = obsbot(img_size,
                    pc_size, 
                    batch_size,
                    model_mode,
-                   interp_type).to(device)
+                   interp_type,
+                   pc_initialize).to(device)
 
     model.load_state_dict(torch.load(model_fname))
 
