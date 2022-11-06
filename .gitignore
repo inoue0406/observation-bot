@@ -7,3 +7,4 @@ data
 run/log*
 run/result*
 run/old*
+run/mlruns*
