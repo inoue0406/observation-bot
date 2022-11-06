@@ -1,6 +1,6 @@
 #!/bin/bash
 
-case="result_20221030_obsbot_artfield_randinit2"
+case="result_20221107_obsbot_artfield_mflow"
 
 # running script for Rainfall Prediction with ConvLSTM
 python ../src/main_obsbot.py --model_name seq2seq\

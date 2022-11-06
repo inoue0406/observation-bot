@@ -8,6 +8,9 @@ import os
 import json
 import time
 
+import mlflow
+import mlflow.pytorch
+
 from scaler import *
 from train_valid_epoch import *
 from utils import Logger
@@ -26,6 +29,8 @@ def count_parameters(model,f):
     f.write("Number of params:"+str(Nparam)+", Trainable parameters:"+str(Ntrain)+"\n")
     
 if __name__ == '__main__':
+
+    experiment_id = mlflow.get_experiment_by_name("Obsbot")
    
     # parse command-line options
     opt = parse_opts()
@@ -157,30 +162,38 @@ if __name__ == '__main__':
             ['epoch', 'loss'])
     
         # training 
-        for epoch in range(1,opt.n_epochs+1):
-            # step scheduler
-            scheduler.step()
-            # training & validation
-            train_epoch(epoch,opt.n_epochs,train_loader,model,loss_fn,optimizer,
-                        train_logger,train_batch_logger,opt,scl)
-            #valid_epoch(epoch,opt.n_epochs,valid_loader,model,loss_fn,
-            #            valid_logger,opt,scl)
+        with mlflow.start_run(experiment_id=experiment_id):
+            mlflow.log_params(vars(opt))
 
-            if epoch % opt.checkpoint == 0:
-                # save the trained model for every checkpoint
-                # (1) as binary 
-                #torch.save(model,os.path.join(opt.result_path,
-                #                                 'trained_obsbot_epoch%03d.model' % epoch))
-                # (2) as state dictionary
-                torch.save(model.state_dict(),
-                           os.path.join(opt.result_path,
-                                        'trained_obsbot_epoch%03d.dict' % epoch))
-        # save the trained model
-        # (1) as binary 
-        #torch.save(model,os.path.join(opt.result_path, 'trained_obsbot.model'))
-        # (2) as state dictionary
-        torch.save(model.state_dict(),
-                   os.path.join(opt.result_path, 'trained_obsbot.dict'))
+            for epoch in range(1,opt.n_epochs+1):
+                # step scheduler
+                scheduler.step()
+                # training & validation
+                train_epoch(epoch,opt.n_epochs,train_loader,model,loss_fn,optimizer,
+                            train_logger,train_batch_logger,opt,scl)
+                #valid_epoch(epoch,opt.n_epochs,valid_loader,model,loss_fn,
+                #            valid_logger,opt,scl)
+
+                # log time with mlflow
+                total_time = time.time() - tstart
+                mlflow.log_metric("Elapsed Time", total_time, step=epoch)
+
+                if epoch % opt.checkpoint == 0:
+                    # save the trained model for every checkpoint
+                    # (1) as binary 
+                    #torch.save(model,os.path.join(opt.result_path,
+                    #                                 'trained_obsbot_epoch%03d.model' % epoch))
+                    # (2) as state dictionary
+                    torch.save(model.state_dict(),
+                            os.path.join(opt.result_path,
+                                            'trained_obsbot_epoch%03d.dict' % epoch))
+            # save the trained model
+            # (1) as binary 
+            #torch.save(model,os.path.join(opt.result_path, 'trained_obsbot.model'))
+            # (2) as state dictionary
+            torch.save(model.state_dict(),
+                       os.path.join(opt.result_path, 'trained_obsbot.dict'))
+            mlflow.pytorch.log_model(model, artifact_path="Final")
 
     # test datasets if specified
     batch_size_test = 4

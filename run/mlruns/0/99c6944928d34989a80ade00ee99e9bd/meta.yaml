@@ -1,0 +1,15 @@
+artifact_uri: file:///home/tsuyoshi/observation-bot/run/mlruns/0/99c6944928d34989a80ade00ee99e9bd/artifacts
+end_time: 1667753115973
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: 99c6944928d34989a80ade00ee99e9bd
+run_name: hilarious-snail-176
+run_uuid: 99c6944928d34989a80ade00ee99e9bd
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1667753114026
+status: 4
+tags: []
+user_id: tsuyoshi

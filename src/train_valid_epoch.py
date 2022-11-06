@@ -4,6 +4,9 @@ import torchvision
 import numpy as np
 import torch.utils.data as data
 import torchvision.transforms as transforms
+import math
+
+import mlflow
 
 from jma_pytorch_dataset import *
 from utils import AverageMeter, Logger
@@ -46,12 +49,25 @@ def train_epoch(epoch,num_epochs,train_loader,model,loss_fn,optimizer,train_logg
             'lr': optimizer.param_groups[0]['lr']
         })
 
+        # logging with MLflow
+        mlflow.log_metric(
+            "Loss",losses.val,
+            step=math.ceil(epoch * len(train_loader) / train_loader.batch_size) + i_batch,
+        )
+        mlflow.log_metric(
+            "Learning Rate",
+            loss.item(),
+            step=math.ceil(epoch * len(train_loader) / train_loader.batch_size) + i_batch,
+        )
+
         if (i_batch+1) % 1 == 0:
             print ('Train Epoch [%d/%d], Iter [%d/%d] Loss: %.4e' 
                    %(epoch, num_epochs, i_batch+1, len(train_loader.dataset)//train_loader.batch_size, loss.item()))
 
     # update lr for optimizer
     optimizer.step()
+
+    mlflow.log_metric("Average Loss", losses.avg, step=epoch)
 
     train_logger.log({
         'epoch': epoch,
