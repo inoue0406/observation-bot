@@ -56,7 +56,7 @@ def train_epoch(epoch,num_epochs,train_loader,model,loss_fn,optimizer,train_logg
         )
         mlflow.log_metric(
             "Learning Rate",
-            loss.item(),
+            optimizer.param_groups[0]['lr'],
             step=math.ceil(epoch * len(train_loader) / train_loader.batch_size) + i_batch,
         )
 

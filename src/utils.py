@@ -41,7 +41,7 @@ class Logger(object):
 
         self.logger.writerow(write_values)
         self.log_file.flush()
-
+    
 def log_freq_distr_pytorch(x,fname):
     # this routine logs the frequency of particular tensor
     x_np = x.to('cpu').detach().numpy().copy()

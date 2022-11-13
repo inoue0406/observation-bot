@@ -11,7 +11,7 @@ python ../src/main_obsbot.py --model_name seq2seq\
        --valid_path ../data/artificial_uniform_valid.csv \
        --test --eval_threshold 0.5 10 20 --test_path ../data/artificial_uniform_valid.csv \
        --result_path $case --tdim_use 12 --tdim_loss 12 --learning_rate 0.001 --lr_decay 0.9 \
-       --batch_size 8 --n_epochs 1000 --n_threads 4 --checkpoint 10 \
+       --batch_size 8 --n_epochs 100 --n_threads 4 --checkpoint 10 \
        --loss_function MSE\
        --interp_type nearest_kdtree\
        --optimizer adam \
