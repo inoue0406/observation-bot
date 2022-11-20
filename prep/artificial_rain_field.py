@@ -136,11 +136,10 @@ def plot_field(out_field,pic_path,case):
         gc.collect()
 
 
-def generate_rain_field(v,scale,volume,num,out_dir):
+def generate_rain_field(grid_size,v,scale,volume,num,out_dir):
     # initial values
     #scale = 0.1
     grid_size_gp = 50
-    grid_size = 200
     nsamples = 1
     xy_grd,sim=simulate_initial_gp_field(scale,grid_size_gp,nsamples,volume,seed=num)
 
@@ -179,7 +178,8 @@ if __name__ == '__main__':
 
     # max motion vector [pixels/frame]
     vmax = 0.0
-    out_dir = "../data/artfield/vzero/"
+    out_dir = "../data/artfield/vzero_256/"
+    grid_size = 256
 
     if argc != 4:
         print('Usage: python artificial_rain_field.py seed start end')
@@ -190,6 +190,10 @@ if __name__ == '__main__':
     iend = int(argvs[3])
     print("random seed:",seed)
     print("start and end of the dataset:",istart,iend)
+
+    # create result dir
+    if not os.path.exists(out_dir):
+        os.mkdir(out_dir)
     
     # run
     np.random.seed(seed=seed)
@@ -199,4 +203,4 @@ if __name__ == '__main__':
         velocity = (vx, vy)
         scale = np.random.uniform(0.01,0.1)
         volume = np.random.uniform(0.1,1.0)
-        generate_rain_field(velocity,scale,volume,num,out_dir)
+        generate_rain_field(grid_size,velocity,scale,volume,num,out_dir)
