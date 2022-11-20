@@ -59,6 +59,18 @@ class observer_interp2d(nn.Module):
 
         return R_pc
 
+class dcgan_conv(nn.Module):
+    def __init__(self, nin, nout):
+        super(dcgan_conv, self).__init__()
+        self.main = nn.Sequential(
+                nn.Conv2d(nin, nout, 4, 2, 1),
+                nn.BatchNorm2d(nout),
+                nn.LeakyReLU(0.2, inplace=True),
+                )
+
+    def forward(self, input):
+        return self.main(input)
+
 class observer_conv(nn.Module):
     """Summary line.
 
@@ -67,12 +79,36 @@ class observer_conv(nn.Module):
     """
     # Main Class for the Observation Bot
 
-    def __init__(self, interp_type):
+    def __init__(self, hidden_dim, interp_type):
         """Initialization.
 
         Args:
             interp_type (str): type of interpolation algorithm
+            hidden_dim (int): dimension of hidden representation obtained by conv layers
         """
+        super(observer_conv, self).__init__()
+        self.hidden_dim = hidden_dim
+        self.skip_flg = skip_flg
+        nf = 32
+        # input is (nc) x 256 x 256
+        self.c0 = dcgan_conv(nc, nf)
+        # input is (nf) x 128 x 128
+        self.c1 = dcgan_conv(nf, nf)
+        # state size. (nf) x 64 x 64
+        self.c2 = dcgan_conv(nf, nf * 2)
+        # state size. (nf*2) x 32 x 32
+        self.c3 = dcgan_conv(nf * 2, nf * 4)
+        # state size. (nf*4) x 16 x 16
+        self.c4 = dcgan_conv(nf * 4, nf * 8)
+        # state size. (nf*8) x 8 x 8
+        self.c5 = dcgan_conv(nf * 8, nf * 8)
+        # state size. (nf*8) x 4 x 4
+        self.c6 = nn.Sequential(
+                nn.Conv2d(nf * 8, hidden_dim, 4, 1, 0),
+                nn.BatchNorm2d(hidden_dim),
+                nn.Tanh()
+                )
+
         super().__init__()
  
     def forward(self, R, XY_pc):
@@ -88,6 +124,17 @@ class observer_conv(nn.Module):
                                   [batch,channels,N] dimensions.
 
         """
-
-        return None
+        h0 = self.c0(R)
+        h1 = self.c1(h0)
+        h2 = self.c2(h1)
+        h3 = self.c3(h2)
+        h4 = self.c4(h3)
+        h5 = self.c5(h4)
+        h6 = self.c6(h5)
+        if(self.skip_flg):
+            # with skip connection
+            return h6.view(-1, self.dim), [h0, h1, h2, h3, h4, h5]
+        else:
+            # no skip connection
+            return h6.view(-1, self.dim)
 

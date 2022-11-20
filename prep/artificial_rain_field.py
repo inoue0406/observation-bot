@@ -158,7 +158,7 @@ def generate_rain_field(grid_size,v,scale,volume,num,out_dir):
         case = "V%5.2f_%5.2f_S%5.3f_A%5.3f" % (v[0],v[1],scale,volume)
         print("case=",case)
         pic_path= out_dir + "%s/" % case
-        #plot_field(out_field,pic_path,case)
+        plot_field(out_field,pic_path,case)
         
     # type
     out_field = out_field.astype(np.float32)
