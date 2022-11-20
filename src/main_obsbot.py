@@ -66,6 +66,8 @@ if __name__ == '__main__':
                        opt.pc_size, 
                        opt.batch_size,
                        opt.model_mode,
+                       opt.observer_type,
+                       opt.predictor_type,
                        opt.interp_type,
                        opt.pc_initialize).to(device)
 

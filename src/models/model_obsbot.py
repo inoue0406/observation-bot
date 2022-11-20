@@ -11,7 +11,8 @@ class obsbot(nn.Module):
     # Main Class for the Observation Bot
 
     def __init__(self, image_size, pc_size, batch_size,
-                 mode="run", interp_type="bilinear", pc_initialize="regular"):
+                 mode="run", observer_type="interp2d",predictor_type="interp2d",
+                 interp_type="bilinear", pc_initialize="regular"):
         super().__init__()
 
         # set regular grid
@@ -35,9 +36,22 @@ class obsbot(nn.Module):
         self.interp_type = interp_type
 
         # Initialize observer/policy/predictor networks
-        self.observer = observer_interp2d(interp_type)
+        # Observer Network
+        if observer_type == "interp2d":
+            self.observer = observer_interp2d(interp_type)
+        elif observer_type == "conv2d":
+            hidden_dim = 128
+            skip_flg = False
+            self.observer = observer_conv(hidden_dim)
+        # Policy Network
         self.policy = policy_lstm(pc_size, self.npc)
-        self.predictor = predictor_interp2d(interp_type)
+        # Predictor Network
+        if predictor_type == "interp2d":
+            self.predictor = predictor_interp2d(interp_type)
+        elif predictor_type == "deconv2d":
+            hidden_dim = 128
+            skip_flg = False
+            self.predictor = predictor_deconv(hidden_dim,skip_flg)
 
     def xy_grid(self,height,width):
         # generate constant xy grid in [0,1] range
