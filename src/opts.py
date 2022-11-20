@@ -8,22 +8,6 @@ def parse_opts():
         default='radarJMA',
         help='name of dataset')
     parser.add_argument(
-        '--data_path',
-        type=str,
-        help='directory path of data')
-    parser.add_argument(
-        '--valid_data_path',
-        type=str,
-        help='directory path of valid data')
-    parser.add_argument(
-        '--avg_path',
-        type=str,
-        help='directory path of averaged fields')
-    parser.add_argument(
-        '--test_avg_path',
-        type=str,
-        help='directory path of averaged fields')
-    parser.add_argument(
         '--data_scaling',
         default='linear',
         type=str,
@@ -56,13 +40,21 @@ def parse_opts():
         type=str,
         help='validation filelist(csv) path')
     parser.add_argument(
+        '--data_path',
+        type=str,
+        help='directory path of data')
+    parser.add_argument(
+        '--valid_data_path',
+        type=str,
+        help='directory path of valid data')
+    parser.add_argument(
         '--result_path',
         default='results',
         type=str,
         help='Result directory path')
     parser.add_argument(
         '--model_name',
-        default='clstm',
+        default='obsbot',
         type=str,
         help='Model Name')
     parser.add_argument(
@@ -74,7 +66,22 @@ def parse_opts():
         '--interp_type',
         default='bilinear',
         type=str,
-        help='Interpolation type in Euler-Lagrange model')
+        help='Interpolation type used in interp2d type operation')
+    parser.add_argument(
+        '--observer_type',
+        default='interp2d',
+        type=str,
+        help='Observer type in Obsbot model')
+    parser.add_argument(
+        '--policy_type',
+        default='seq2seq',
+        type=str,
+        help='Policy type in Obsbot model')
+    parser.add_argument(
+        '--predictor_type',
+        default='interp2d',
+        type=str,
+        help='Interpolation type in Obsbot model')
     parser.add_argument(
         '--transfer_path',
         default='None',
@@ -99,11 +106,6 @@ def parse_opts():
         default='MSE',
         type=str,
         help='loss function MSE or WeightedMSE or MaxMSE or MultiMSE')
-    parser.add_argument(
-        '--loss_decay',
-        default='1.0',
-        type=float,
-        help='temporal loss decay coeff')
     parser.add_argument(
         '--loss_weights',
         default=[1.0,1.0],
@@ -136,11 +138,6 @@ def parse_opts():
         help='If true, training is not performed.')
     parser.set_defaults(no_train=False)
     parser.add_argument(
-        '--no_val',
-        action='store_true',
-        help='If true, validation is not performed.')
-    parser.set_defaults(no_val=False)
-    parser.add_argument(
         '--test',
         action='store_true',
         help='If true, test is performed.')
@@ -166,28 +163,6 @@ def parse_opts():
         default=10,
         type=int,
         help='Trained model is saved at every this epochs.')
-    parser.add_argument(
-        '--manual_seed',
-        default=1,
-        type=int,
-        help='Manually set random seed')
-    parser.add_argument(
-        '--const_type',
-        default="full",
-        type=str,
-        help='Constraint type for phydnet')
-    # ConvLSTM/TrajGRU Structure
-    parser.add_argument(
-        '--num_input_layer',
-        default=1,
-        type=int,
-        help='Number of input layers/channels.')
-    parser.add_argument(
-        '--num_filters',
-        default=[8,32,96,96],
-        type=int,
-        nargs='*',
-        help='Number of convolution filters.')
     
     args = parser.parse_args()
 

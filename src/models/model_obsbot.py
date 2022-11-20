@@ -3,15 +3,15 @@ import torch
 import numpy as np
 
 # Import Observer/Policy/Predictor classes.
-from models.observer import observer_interp2d
+from models.observer import observer_interp2d, observer_conv
 from models.policy import policy_lstm
-from models.predictor import predictor_interp2d
+from models.predictor import predictor_interp2d, predictor_deconv
 
 class obsbot(nn.Module):
     # Main Class for the Observation Bot
 
     def __init__(self, image_size, pc_size, batch_size,
-                 mode="run", observer_type="interp2d",predictor_type="interp2d",
+                 mode="run", observer_type="interp2d",policy_type="seq2seq",predictor_type="interp2d",
                  interp_type="bilinear", pc_initialize="regular"):
         super().__init__()
 
@@ -42,9 +42,10 @@ class obsbot(nn.Module):
         elif observer_type == "conv2d":
             hidden_dim = 128
             skip_flg = False
-            self.observer = observer_conv(hidden_dim)
+            self.observer = observer_conv(hidden_dim,skip_flg)
         # Policy Network
-        self.policy = policy_lstm(pc_size, self.npc)
+        if policy_type == "seq2seq":
+            self.policy = policy_lstm(pc_size, self.npc)
         # Predictor Network
         if predictor_type == "interp2d":
             self.predictor = predictor_interp2d(interp_type)

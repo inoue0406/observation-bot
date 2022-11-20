@@ -60,17 +60,18 @@ if __name__ == '__main__':
             scl = LinearScaler(rmax=1.0)
 
     # initialize Observer/Policy/Predictor instance
-    if opt.model_name == 'seq2seq':
+    if opt.model_name == 'obsbot':
 
         model = obsbot(opt.image_size,
                        opt.pc_size, 
                        opt.batch_size,
                        opt.model_mode,
                        opt.observer_type,
+                       opt.policy_type,
                        opt.predictor_type,
                        opt.interp_type,
                        opt.pc_initialize).to(device)
-
+                       
     # Data Parallel Multi-GPU Run
     if torch.cuda.device_count() > 1:
         print("Let's use", torch.cuda.device_count(), "GPUs!")

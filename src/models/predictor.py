@@ -78,14 +78,15 @@ class predictor_deconv(nn.Module):
     (Currently, this class is not implemented)
     """
 
-    def __init__(self, ):
+    def __init__(self, hidden_dim, skip_flg):
         super(predictor_deconv, self).__init__()
-        self.dim = dim
+        self.hidden_dim = hidden_dim
         self.skip_flg = skip_flg
+        nc = 1
         nf = 32
         self.upc0 = nn.Sequential(
                 # input is Z, going into a convolution
-                nn.ConvTranspose2d(dim, nf * 8, 4, 1, 0),
+                nn.ConvTranspose2d(hidden_dim, nf * 8, 4, 1, 0),
                 nn.BatchNorm2d(nf * 8),
                 nn.LeakyReLU(0.2, inplace=True)
                 )
@@ -140,7 +141,7 @@ class predictor_deconv(nn.Module):
         if(self.skip_flg):
             # with skip connection
             vec, skip = input
-            d0 = self.upc0(vec.view(-1, self.dim, 1, 1))
+            d0 = self.upc0(vec.view(-1, self.hidden_dim, 1, 1))
             d1 = self.upc1(torch.cat([d0, skip[5]], 1))
             d2 = self.upc2(torch.cat([d1, skip[4]], 1))
             d3 = self.upc3(torch.cat([d2, skip[3]], 1))
@@ -150,7 +151,7 @@ class predictor_deconv(nn.Module):
         else:
             # no skip connection
             vec = input
-            d0 = self.upc1(vec.view(-1, self.dim, 1, 1))
+            d0 = self.upc1(vec.view(-1, self.hidden_dim, 1, 1))
             d1 = self.upc2(d0)
             d2 = self.upc2(d1)
             d3 = self.upc3(d2)

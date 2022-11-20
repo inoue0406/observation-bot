@@ -79,16 +79,16 @@ class observer_conv(nn.Module):
     """
     # Main Class for the Observation Bot
 
-    def __init__(self, hidden_dim, interp_type):
+    def __init__(self, hidden_dim, skip_flg):
         """Initialization.
 
         Args:
-            interp_type (str): type of interpolation algorithm
             hidden_dim (int): dimension of hidden representation obtained by conv layers
         """
         super(observer_conv, self).__init__()
         self.hidden_dim = hidden_dim
         self.skip_flg = skip_flg
+        nc = 1
         nf = 32
         # input is (nc) x 256 x 256
         self.c0 = dcgan_conv(nc, nf)
