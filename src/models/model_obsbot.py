@@ -41,8 +41,7 @@ class obsbot(nn.Module):
             self.observer = observer_interp2d(interp_type)
         elif observer_type == "conv2d":
             hidden_dim = 128
-            skip_flg = False
-            self.observer = observer_conv(hidden_dim,skip_flg,self.npc)
+            self.observer = observer_conv(hidden_dim,self.npc)
         # Policy Network
         if policy_type == "seq2seq":
             self.policy = policy_lstm(pc_size, self.npc)
@@ -51,8 +50,7 @@ class obsbot(nn.Module):
             self.predictor = predictor_interp2d(interp_type)
         elif predictor_type == "deconv2d":
             hidden_dim = 128
-            skip_flg = False
-            self.predictor = predictor_deconv(hidden_dim,skip_flg)
+            self.predictor = predictor_deconv(hidden_dim,self.npc)
 
     def xy_grid(self,height,width):
         # generate constant xy grid in [0,1] range

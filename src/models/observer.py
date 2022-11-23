@@ -79,7 +79,7 @@ class observer_conv(nn.Module):
     """
     # Main Class for the Observation Bot
 
-    def __init__(self, hidden_dim, skip_flg, npc):
+    def __init__(self, hidden_dim, npc):
         """Initialization.
 
         Args:
@@ -89,7 +89,6 @@ class observer_conv(nn.Module):
         super(observer_conv, self).__init__()
         self.hidden_dim = hidden_dim
         self.npc = npc
-        self.skip_flg = skip_flg
         nc = 1
         nf = 32
         # input is (nc) x 256 x 256
@@ -154,12 +153,8 @@ class observer_conv(nn.Module):
         h4 = self.c4(h3)
         h5 = self.c5(h4)
         h6 = self.c6(h5)
-        if(self.skip_flg):
-            # with skip connection
-            h_conv = h6.view(-1, self.hidden_dim), [h0, h1, h2, h3, h4, h5]
-        else:
-            # no skip connection
-            h_conv = h6.view(-1, self.hidden_dim)
+        # no skip connection
+        h_conv = h6.view(-1, self.hidden_dim)
         
         # predicting point observation
         # (fully-connected network)
@@ -169,5 +164,6 @@ class observer_conv(nn.Module):
         h_fc1 = self.fc1(torch.cat([h_conv,h_xy],1))
         h_fc2 = self.fc2(h_fc1)
         R_pc = self.fc3(h_fc2)
-        import pdb;pdb.set_trace()
+        # adjust shape
+        R_pc = R_pc[:,None,:]
         return R_pc

@@ -76,10 +76,16 @@ class predictor_deconv(nn.Module):
     observed quantities to estimate the spatial distribution of underlying field.
     """
 
-    def __init__(self, hidden_dim, skip_flg):
+    def __init__(self, hidden_dim, npc):
+        """Initialization.
+
+        Args:
+            hidden_dim (int): dimension of hidden representation obtained by conv layers
+            npc (int): dimension of point cloud 
+        """        
         super(predictor_deconv, self).__init__()
         self.hidden_dim = hidden_dim
-        self.skip_flg = skip_flg
+        self.npc = npc
         nc = 1
         nf = 32
         self.upc0 = nn.Sequential(
@@ -88,74 +94,71 @@ class predictor_deconv(nn.Module):
                 nn.BatchNorm2d(nf * 8),
                 nn.LeakyReLU(0.2, inplace=True)
                 )
-        if(self.skip_flg):
-            # with skip connection
-            # state size. (nf*8) x 4 x 4
-            self.upc1 = dcgan_upconv(nf * 8 * 2, nf * 8)
-            # state size. (nf*8) x 8 x 8
-            self.upc2 = dcgan_upconv(nf * 8 * 2, nf * 4)
-            # state size. (nf*4) x 16 x 16
-            self.upc3 = dcgan_upconv(nf * 4 * 2, nf * 2)
-            # state size. (nf*2) x 32 x 32
-            self.upc4 = dcgan_upconv(nf * 2 * 2, nf)
-            # state size. (nf*2) x 64 x 64
-            self.upc5 = dcgan_upconv(nf * 2, nf)
-            # state size. (nf) x 128 x 128
-            self.upc6 = nn.Sequential(
-                nn.ConvTranspose2d(nf * 2, nc, 4, 2, 1),
-                nn.Sigmoid()
-                # state size. (nc) x 256 x 256
-                )
-        else:
-            # without skip connection
-            # state size. (nf*8) x 4 x 4
-            self.upc1 = dcgan_upconv(nf * 8, nf * 8)
-            # state size. (nf*8) x 8 x 8
-            self.upc2 = dcgan_upconv(nf * 8, nf * 4)
-            # state size. (nf*4) x 16 x 16
-            self.upc3 = dcgan_upconv(nf * 4, nf * 2)
-            # state size. (nf*2) x 32 x 32
-            self.upc4 = dcgan_upconv(nf * 2, nf)
-            # state size. (nf) x 64 x 64
-            self.upc5 = dcgan_upconv(nf, nf)
-            # state size. (nf) x 128 x 128
-            self.upc6 = nn.Sequential(
-                nn.ConvTranspose2d(nf, nc, 4, 2, 1),
-                nn.Sigmoid()
-                # state size. (nc) x 256 x 256
-                )
 
-    def forward(self, input):
-        """sum 2 values.
+        # without skip connection
+        # state size. (nf*8) x 4 x 4
+        self.upc1 = dcgan_upconv(nf * 8, nf * 8)
+        # state size. (nf*8) x 8 x 8
+        self.upc2 = dcgan_upconv(nf * 8, nf * 4)
+        # state size. (nf*4) x 16 x 16
+        self.upc3 = dcgan_upconv(nf * 4, nf * 2)
+        # state size. (nf*2) x 32 x 32
+        self.upc4 = dcgan_upconv(nf * 2, nf)
+        # state size. (nf) x 64 x 64
+        self.upc5 = dcgan_upconv(nf, nf)
+        # state size. (nf) x 128 x 128
+        self.upc6 = nn.Sequential(
+            nn.ConvTranspose2d(nf, nc, 4, 2, 1),
+            nn.Sigmoid()
+            # state size. (nc) x 256 x 256
+            )
+        
+        # FC network for predicting observed quantities
+        # fc0 (npc*3) -> (hidden_dim)
+        self.fc0 =  nn.Sequential(
+                        nn.Linear(self.npc*3, self.hidden_dim),
+                        nn.ReLU(),
+                        nn.Dropout(0.2))
+        # fc1 (hidden_dim) -> (hidden_dim)
+        self.fc1 =  nn.Sequential(
+                        nn.Linear(self.hidden_dim, self.hidden_dim),
+                        nn.ReLU(),
+                        nn.Dropout(0.2))
+        # fc1 (hidden_dim) -> (hidden_dim)
+        self.fc2 =  nn.Sequential(
+                        nn.Linear(self.hidden_dim, self.hidden_dim),
+                        nn.ReLU(),
+                        nn.Dropout(0.2))
+
+    def forward(self, R_pc, XY_pc, XY_grd):
+        """Forward. 
 
         Args:
-            x (float): 1st argument
-            y (float): 2nd argument
+            R_pc (torch.Tensor): Field value at locations specified by XY_pc with 
+                                  [batch,channels,N] dimensions.
+            XY_pc (torch.Tensor): The 2-d location of observation bots with [batch,2,N] dimensions,
+                                   where N is the number of bots.
+            xy_grd (torch.Tensor) : The regular grid with [x,y,2] dimensions.
 
         Returns:
-            float: summation
+            R_grd (torch.Tensor): Interpolated field with [batch,channels,height,width] dimensions.
 
         """
-        if(self.skip_flg):
-            # with skip connection
-            vec, skip = input
-            d0 = self.upc0(vec.view(-1, self.hidden_dim, 1, 1))
-            d1 = self.upc1(torch.cat([d0, skip[5]], 1))
-            d2 = self.upc2(torch.cat([d1, skip[4]], 1))
-            d3 = self.upc3(torch.cat([d2, skip[3]], 1))
-            d4 = self.upc4(torch.cat([d3, skip[2]], 1))
-            d5 = self.upc5(torch.cat([d4, skip[1]], 1))
-            output = self.upc6(torch.cat([d5, skip[0]], 1))
-        else:
-            # no skip connection
-            vec = input
-            d0 = self.upc1(vec.view(-1, self.hidden_dim, 1, 1))
-            d1 = self.upc2(d0)
-            d2 = self.upc2(d1)
-            d3 = self.upc3(d2)
-            d4 = self.upc4(d3)
-            d5 = self.upc5(d4)
-            output = self.upc6(d5)
+        # FC network
+        hidden = torch.cat([R_pc,XY_pc],1)
+        h_fc0 = self.fc0(hidden.view(-1,self.npc*3))
+        h_fc1 = self.fc1(h_fc0)
+        h_fc2 = self.fc2(h_fc1)
+
+        # Deconv network
+        # no skip connection
+        d0 = self.upc0(h_fc2.view(-1, self.hidden_dim, 1, 1))
+        d1 = self.upc1(d0)
+        d2 = self.upc2(d1)
+        d3 = self.upc3(d2)
+        d4 = self.upc4(d3)
+        d5 = self.upc5(d4)
+        output = self.upc6(d5)
         return output
 
         return None
