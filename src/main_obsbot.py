@@ -169,13 +169,13 @@ if __name__ == '__main__':
             mlflow.log_params(vars(opt))
 
             for epoch in range(1,opt.n_epochs+1):
-                # step scheduler
-                scheduler.step()
                 # training & validation
                 train_epoch(epoch,opt.n_epochs,train_loader,model,loss_fn,optimizer,
                             train_logger,train_batch_logger,opt,scl)
                 #valid_epoch(epoch,opt.n_epochs,valid_loader,model,loss_fn,
                 #            valid_logger,opt,scl)
+                # step scheduler
+                scheduler.step()
 
                 # log time with mlflow
                 total_time = time.time() - tstart

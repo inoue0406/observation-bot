@@ -42,7 +42,7 @@ class obsbot(nn.Module):
         elif observer_type == "conv2d":
             hidden_dim = 128
             skip_flg = False
-            self.observer = observer_conv(hidden_dim,skip_flg)
+            self.observer = observer_conv(hidden_dim,skip_flg,self.npc)
         # Policy Network
         if policy_type == "seq2seq":
             self.policy = policy_lstm(pc_size, self.npc)

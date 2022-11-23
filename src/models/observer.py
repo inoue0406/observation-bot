@@ -79,14 +79,16 @@ class observer_conv(nn.Module):
     """
     # Main Class for the Observation Bot
 
-    def __init__(self, hidden_dim, skip_flg):
+    def __init__(self, hidden_dim, skip_flg, npc):
         """Initialization.
 
         Args:
             hidden_dim (int): dimension of hidden representation obtained by conv layers
+            npc (int): dimension of point cloud 
         """
         super(observer_conv, self).__init__()
         self.hidden_dim = hidden_dim
+        self.npc = npc
         self.skip_flg = skip_flg
         nc = 1
         nf = 32
@@ -108,22 +110,43 @@ class observer_conv(nn.Module):
                 nn.BatchNorm2d(hidden_dim),
                 nn.Tanh()
                 )
+        
+        # FC network for predicting observed quantities
+        # fc0 (npc*2) -> (hidden_dim)
+        self.fc0 =  nn.Sequential(
+                        nn.Linear(self.npc*2, self.hidden_dim),
+                        nn.ReLU(),
+                        nn.Dropout(0.2))
+        # fc1 (hidden_dim*2) -> (hidden_dim)
+        self.fc1 =  nn.Sequential(
+                        nn.Linear(self.hidden_dim*2, self.hidden_dim),
+                        nn.ReLU(),
+                        nn.Dropout(0.2))
+        self.fc2 =  nn.Sequential(
+                        nn.Linear(self.hidden_dim, self.hidden_dim),
+                        nn.ReLU(),
+                        nn.Dropout(0.2))
+        self.fc3 =  nn.Sequential(
+                        nn.Linear(self.hidden_dim, self.npc),
+                        nn.ReLU(),
+                        nn.Dropout(0.2))
 
-        super().__init__()
- 
-    def forward(self, R, XY_pc):
+    def forward(self, R, XY_pc, XY_grd):
         """sum 2 values.
 
         Args:
             R (torch.Tensor): The ground truth input field with [batch,channels,height,width] dimensions.
             XY_pc (torch.Tensor): The 2-d location of observation bots with [batch,2,N] dimensions,
                                    where N is the number of bots.
+            xy_grd (torch.Tensor) : The regular grid with [x,y,2] dimensions.
 
         Returns:
             R_pc (torch.Tensor): Interpolated field value at locations specified by XY_pc with 
                                   [batch,channels,N] dimensions.
 
         """
+
+        # The conv part
         h0 = self.c0(R)
         h1 = self.c1(h0)
         h2 = self.c2(h1)
@@ -133,8 +156,18 @@ class observer_conv(nn.Module):
         h6 = self.c6(h5)
         if(self.skip_flg):
             # with skip connection
-            return h6.view(-1, self.dim), [h0, h1, h2, h3, h4, h5]
+            h_conv = h6.view(-1, self.hidden_dim), [h0, h1, h2, h3, h4, h5]
         else:
             # no skip connection
-            return h6.view(-1, self.dim)
-
+            h_conv = h6.view(-1, self.hidden_dim)
+        
+        # predicting point observation
+        # (fully-connected network)
+        
+        h_xy = self.fc0(XY_pc.view(-1,self.npc*2))
+        # combine convnet output and XY information
+        h_fc1 = self.fc1(torch.cat([h_conv,h_xy],1))
+        h_fc2 = self.fc2(h_fc1)
+        R_pc = self.fc3(h_fc2)
+        import pdb;pdb.set_trace()
+        return R_pc

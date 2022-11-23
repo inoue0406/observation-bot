@@ -72,10 +72,8 @@ class dcgan_upconv(nn.Module):
 
 class predictor_deconv(nn.Module):
     """Summary line.
-
     This type of predictor performs deconvolution operation from
     observed quantities to estimate the spatial distribution of underlying field.
-    (Currently, this class is not implemented)
     """
 
     def __init__(self, hidden_dim, skip_flg):
