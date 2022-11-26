@@ -2,14 +2,12 @@
 # Plot Predicted Rainfall Data
 #
 import torch
-import torchvision
 import numpy as np
-import torch.utils.data as data
 
 import pandas as pd
-import h5py
 import os
 import sys
+import json
 
 import matplotlib
 matplotlib.use('Agg')
@@ -58,11 +56,29 @@ def plot_field_pc(R,x,y,r,title,png_fpath,vmin=0,vmax=1):
     plt.close()
 
 # plot comparison of predicted vs ground truth
-def plot_comp_prediction(data_path,filelist,model_fname,batch_size,tdim_use,
-                         pic_path,scl,case,img_size,interp_type,mode='png_whole'):
+def plot_comp_prediction(case):
+
+    # path setting
+    data_path = opt["data_path"]
+    filelist = opt["test_path"] 
+    model_fname = case + '/trained_obsbot.dict'
+    pic_path = case + '/png/'
+    data_scaling = opt["data_scaling"]
+
+    # model setting
+    batch_size = opt["batch_size"]
+    tdim_use = opt["tdim_use"]
+    img_size = opt["image_size"]
+    interp_type = opt["interp_type"]
+
     # create pic save dir
     if not os.path.exists(pic_path):
         os.mkdir(pic_path)
+
+    # prepare scaler for data
+    if data_scaling == 'linear':
+        # use identity scaler
+        scl = LinearScaler(rmax=1.0)
 
     # dataset
     valid_dataset = ArtfieldDataset(root_dir=data_path,
@@ -76,21 +92,17 @@ def plot_comp_prediction(data_path,filelist,model_fname,batch_size,tdim_use,
     # load the saved model
     model = torch.load(model_fname)
 
-    pc_size = 10
-    INPUT_DIM = (pc_size**2) * 3 # The input is (X,Y,R)
-    OUTPUT_DIM = (pc_size**2) * 2 # The output is (X,Y)
-    HID_DIM = 512
-    N_LAYERS = 3
-    DROPOUT = 0.5
     model_mode = "check"
-    pc_initialize = "random"
 
-    model = obsbot(img_size,
-                   pc_size, 
-                   batch_size,
+    model = obsbot(opt["image_size"],
+                   opt["pc_size"], 
+                   opt["batch_size"],
                    model_mode,
-                   interp_type,
-                   pc_initialize).to(device)
+                   opt["observer_type"],
+                   opt["policy_type"],
+                   opt["predictor_type"],
+                   opt["interp_type"],
+                   opt["pc_initialize"]).to(device)
 
     model.load_state_dict(torch.load(model_fname))
 
@@ -134,11 +146,6 @@ def plot_comp_prediction(data_path,filelist,model_fname,batch_size,tdim_use,
         return
         
 if __name__ == '__main__':
-    # params
-    batch_size = 2
-    tdim_use = 12
-    img_size = 200
-    interp_type = "nearest_kdtree"
 
     # read case name from command line
     argvs = sys.argv
@@ -150,19 +157,10 @@ if __name__ == '__main__':
 
     case = argvs[1]
 
-    data_path = '../data/artfield/vzero/'
-    filelist = '../data/artificial_uniform_valid.csv'
-    model_fname = case + '/trained_obsbot.dict'
-    pic_path = case + '/png/'
+    # Get settings information from opts.json file
+    with open(os.path.join(case, 'opts.json'), 'r') as opt_file:
+        opt = json.load(opt_file)
 
-    data_scaling = 'linear'
-    
-    # prepare scaler for data
-    if data_scaling == 'linear':
-        # use identity scaler
-        scl = LinearScaler(rmax=1.0)
-        
-    plot_comp_prediction(data_path,filelist,model_fname,batch_size,tdim_use,
-                         pic_path,scl,case,img_size,interp_type,mode='png_ind')
+    plot_comp_prediction(case)
 
 
