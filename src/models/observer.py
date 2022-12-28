@@ -111,24 +111,25 @@ class observer_conv(nn.Module):
                 )
         
         # FC network for predicting observed quantities
+        r_drop = 0.0
         # fc0 (npc*2) -> (hidden_dim)
         self.fc0 =  nn.Sequential(
                         nn.Linear(self.npc*2, self.hidden_dim),
                         nn.ReLU(),
-                        nn.Dropout(0.2))
+                        nn.Dropout(r_drop))
         # fc1 (hidden_dim*2) -> (hidden_dim)
         self.fc1 =  nn.Sequential(
                         nn.Linear(self.hidden_dim*2, self.hidden_dim),
                         nn.ReLU(),
-                        nn.Dropout(0.2))
+                        nn.Dropout(r_drop))
         self.fc2 =  nn.Sequential(
                         nn.Linear(self.hidden_dim, self.hidden_dim),
                         nn.ReLU(),
-                        nn.Dropout(0.2))
+                        nn.Dropout(r_drop))
         self.fc3 =  nn.Sequential(
                         nn.Linear(self.hidden_dim, self.npc),
                         nn.ReLU(),
-                        nn.Dropout(0.2))
+                        nn.Dropout(r_drop))
 
     def forward(self, R, XY_pc, XY_grd):
         """sum 2 values.
