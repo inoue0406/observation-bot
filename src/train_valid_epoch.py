@@ -35,6 +35,60 @@ def train_epoch(epoch,num_epochs,train_loader,model,loss_fn,optimizer,train_logg
         output = model(input)
         # use opt.tdim_loss steps
         loss = loss_fn(output[:,0:opt.tdim_loss,:,:,:], target[:,0:opt.tdim_loss,:,:,:])
+        loss.backward()
+        optimizer.step()
+        # for logging
+        losses.update(loss.item(), input.size(0))
+
+        print('chk lr ',optimizer.param_groups[0]['lr'])
+        train_batch_logger.log({
+            'epoch': epoch,
+            'batch': i_batch+1,
+            'loss': losses.val,
+            'lr': optimizer.param_groups[0]['lr']
+        })
+
+        # logging with MLflow
+        mlflow.log_metric(
+            "Loss",losses.val,
+            step=math.ceil(epoch * len(train_loader) / train_loader.batch_size) + i_batch,
+        )
+        mlflow.log_metric(
+            "Learning Rate",
+            optimizer.param_groups[0]['lr'],
+            step=math.ceil(epoch * len(train_loader) / train_loader.batch_size) + i_batch,
+        )
+
+        if (i_batch+1) % 1 == 0:
+            print ('Train Epoch [%d/%d], Iter [%d/%d] Loss: %.4e' 
+                   %(epoch, num_epochs, i_batch+1, len(train_loader.dataset)//train_loader.batch_size, loss.item()))
+
+    # update lr for optimizer
+    optimizer.step()
+
+    mlflow.log_metric("Average Loss", losses.avg, step=epoch)
+
+    train_logger.log({
+        'epoch': epoch,
+        'loss': losses.avg,
+        'lr': optimizer.param_groups[0]['lr']
+    })
+    # free gpu memory
+    del input,target,output,loss
+
+def train_epoch_observer(epoch,num_epochs,train_loader,model,loss_fn,optimizer,train_logger,train_batch_logger,opt,scl):
+    
+    print('train at epoch {}'.format(epoch))
+
+    losses = AverageMeter()
+    
+    for i_batch, sample_batched in enumerate(train_loader):
+        input = Variable(scl.fwd(sample_batched['past'].float())).cuda()
+        # Forward + Backward + Optimize
+        optimizer.zero_grad()
+        target,output = model(input)
+        # use opt.tdim_loss steps
+        loss = loss_fn(output, target)
         # loss = loss_fn(output, target)
         loss.backward()
         optimizer.step()
@@ -76,6 +130,7 @@ def train_epoch(epoch,num_epochs,train_loader,model,loss_fn,optimizer,train_logg
     })
     # free gpu memory
     del input,target,output,loss
+
 
 # --------------------------
 # Validation

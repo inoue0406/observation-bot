@@ -17,7 +17,7 @@ from utils import Logger
 from opts import parse_opts
 from loss_funcs import *    
 
-from models.model_obsbot import obsbot
+from models.model_obsbot import obsbot, obsbot_observer
 
 device = torch.device("cuda")
 
@@ -72,6 +72,17 @@ if __name__ == '__main__':
                        opt.interp_type,
                        opt.pc_initialize).to(device)
                        
+    elif opt.model_name == 'observer':
+        # Observer-only Model
+
+        model = obsbot_observer(opt.image_size,
+                       opt.pc_size, 
+                       opt.batch_size,
+                       opt.model_mode,
+                       opt.observer_type,
+                       opt.interp_type,
+                       opt.pc_initialize).to(device)
+        
     # Data Parallel Multi-GPU Run
     if torch.cuda.device_count() > 1:
         print("Let's use", torch.cuda.device_count(), "GPUs!")
@@ -170,10 +181,14 @@ if __name__ == '__main__':
 
             for epoch in range(1,opt.n_epochs+1):
                 # training & validation
-                train_epoch(epoch,opt.n_epochs,train_loader,model,loss_fn,optimizer,
-                            train_logger,train_batch_logger,opt,scl)
-                #valid_epoch(epoch,opt.n_epochs,valid_loader,model,loss_fn,
-                #            valid_logger,opt,scl)
+                if opt.model_name == 'obsbot':
+                    train_epoch(epoch,opt.n_epochs,train_loader,model,loss_fn,optimizer,
+                                train_logger,train_batch_logger,opt,scl)
+                    #valid_epoch(epoch,opt.n_epochs,valid_loader,model,loss_fn,
+                    #            valid_logger,opt,scl)
+                elif opt.model_name == 'observer':
+                    train_epoch_observer(epoch,opt.n_epochs,train_loader,model,loss_fn,optimizer,
+                                        train_logger,train_batch_logger,opt,scl)
                 # step scheduler
                 scheduler.step()
 

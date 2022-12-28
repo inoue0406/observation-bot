@@ -1,9 +1,9 @@
 #!/bin/bash
 
-case="result_20221120_obsbot_artfield_conv256"
+case="result_20221228_observer_only"
 
-# running script for Rainfall Prediction with ConvLSTM
-python ../src/main_obsbot.py --model_name obsbot\
+# Running Obsbot Script
+python ../src/main_obsbot.py --model_name observer\
        --dataset artfield --model_mode run --data_scaling linear\
        --image_size 256 \
        --pc_size 10 --pc_initialize random\
@@ -21,7 +21,3 @@ python ../src/main_obsbot.py --model_name obsbot\
        --optimizer adam \
        --transfer_path None
 
-# post plotting
-python ../post/plot_pred_artfield_obsbot.py $case
-# gif animation
-python ../post/gif_animation.py $case

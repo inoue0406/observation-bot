@@ -73,7 +73,6 @@ class obsbot(nn.Module):
         
         bsize, tsize, channels, height, width = input.size()
 
-        # Lagrangian prediction
         R_grd = input[:,0,:,:,:] #use initial
 
         # Set Initial Grid (which will be fixed through time progress)
@@ -112,3 +111,85 @@ class obsbot(nn.Module):
             return xout
         elif self.mode == "check":
             return xout,r_pc_out,xy_pc_out
+
+class obsbot_observer(nn.Module):
+    # A class for the Observer-only runs
+
+    def __init__(self, image_size, pc_size, batch_size,
+                 mode="run", observer_type="interp2d",
+                 interp_type="bilinear", pc_initialize="regular"):
+        super().__init__()
+
+        # set regular grid
+        self.Xgrid,self.Ygrid = self.xy_grid(image_size,image_size)
+        # set pc grid
+        if pc_initialize=="regular":
+            # regular grid
+            self.Xpc,self.Ypc = self.xy_grid(pc_size,pc_size)
+            # 2d to 1d variable
+            self.Xpc = self.Xpc.flatten()
+            self.Ypc = self.Ypc.flatten()
+        elif pc_initialize=="random":
+            # random point initialization
+            self.Xpc = torch.rand(pc_size*pc_size)
+            self.Ypc = torch.rand(pc_size*pc_size)
+
+        # number of point cloud
+        self.npc = pc_size*pc_size
+        # mode
+        self.mode = mode
+        self.interp_type = interp_type
+
+        # Observer Network (Teacher)
+        self.observer_t = observer_interp2d(interp_type)
+
+        # Observer Network (Models to be trained)
+        if observer_type == "interp2d":
+            self.observer = observer_interp2d(interp_type)
+        elif observer_type == "conv2d":
+            hidden_dim = 128
+            self.observer = observer_conv(hidden_dim,self.npc)
+
+    def xy_grid(self,height,width):
+        # generate constant xy grid in [0,1] range
+        x1grd = torch.linspace(0,1,width).cuda() # 1d grid
+        y1grd = torch.linspace(0,1,height).cuda() # 1d grid
+
+        Xgrid = torch.zeros(height, width)
+        Ygrid = torch.zeros(height, width)
+        for j in range(height):
+            Xgrid[j,:] = x1grd
+        for k in range(width):
+            Ygrid[:,k] = y1grd
+    
+        return Xgrid,Ygrid
+
+    def forward(self, input):
+        
+        # Grid variable: XY_grd, R_grd
+        # Point cloud variable: XY_pc, R_pc
+        
+        bsize, tsize, channels, height, width = input.size()
+
+        R_grd = input[:,0,:,:,:] #use initial
+
+        # Set Initial Grid (which will be fixed through time progress)
+        X_grd = torch.stack(bsize*[self.Xgrid]).unsqueeze(1)
+        Y_grd = torch.stack(bsize*[self.Ygrid]).unsqueeze(1)
+        XY_grd = torch.cat([X_grd,Y_grd],dim=1).cuda()
+        # Set Initial PC
+        X_pc = torch.stack(bsize*[self.Xpc]).unsqueeze(1)
+        Y_pc = torch.stack(bsize*[self.Ypc]).unsqueeze(1)
+        XY_pc = torch.cat([X_pc,Y_pc],dim=1).cuda()
+
+        xout_t = torch.zeros(bsize, tsize, channels, self.npc,  requires_grad=True).cuda()
+        xout = torch.zeros(bsize, tsize, channels, self.npc,  requires_grad=True).cuda()
+
+        for it in range(tsize):
+            # ----------------------------------------------------------
+            # (1) Observation: Interpolate UV to Point Cloud position.
+            xout_t[:,it,:,:] = self.observer_t(input[:,it,:,:,:],XY_pc,XY_grd)
+            xout[:,it,:,:] = self.observer(input[:,it,:,:,:],XY_pc,XY_grd)
+
+        if self.mode == "run":
+            return xout_t,xout
