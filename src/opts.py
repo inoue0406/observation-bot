@@ -83,10 +83,16 @@ def parse_opts():
         type=str,
         help='Interpolation type in Obsbot model')
     parser.add_argument(
-        '--transfer_path',
+        '--freeze',
+        default=[0,0,0],
+        type=int,
+        nargs='*',
+        help='Flags specifying layers to be freezed in Observer/Policy/Predictor')
+    parser.add_argument(
+        '--observer_transfer_path',
         default='None',
         type=str,
-        help='Transfer Learning Model Path')
+        help='Observer pretrained model path for transfer learning')
     parser.add_argument(
         '--tdim_use',
         default=12,

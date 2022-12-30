@@ -146,14 +146,6 @@ if __name__ == '__main__':
         
         if opt.loss_function == 'MSE':
             loss_fn = torch.nn.MSELoss()
-        elif opt.loss_function == 'Weighted_MSE_MAE':
-            loss_fn = Weighted_mse_mae(LAMBDA=0.01).to(device)
-        elif opt.loss_function == 'WeightedMSE':
-            loss_fn = weighted_MSE_loss(opt.loss_weights)
-        elif opt.loss_function == 'MaxMSE':
-            loss_fn = max_MSE_loss(opt.loss_weights)
-        elif opt.loss_function == 'MultiMSE':
-            loss_fn = multi_MSE_loss(opt.loss_weights)
 
         # Type of optimizers adam/rmsprop
         if opt.optimizer == 'adam':
@@ -209,8 +201,12 @@ if __name__ == '__main__':
             # (1) as binary 
             #torch.save(model,os.path.join(opt.result_path, 'trained_obsbot.model'))
             # (2) as state dictionary
+            if opt.model_name == 'obsbot':
+                model_fname = 'trained_obsbot.dict'
+            elif  opt.model_name == 'observer':
+                model_fname = 'trained_observer.dict'
             torch.save(model.state_dict(),
-                       os.path.join(opt.result_path, 'trained_obsbot.dict'))
+                       os.path.join(opt.result_path, model_fname))
             mlflow.pytorch.log_model(model, artifact_path="Final")
 
     # test datasets if specified
