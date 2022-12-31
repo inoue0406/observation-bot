@@ -12,6 +12,7 @@ class obsbot(nn.Module):
 
     def __init__(self, image_size, pc_size, batch_size,
                  mode="run", observer_type="interp2d",policy_type="seq2seq",predictor_type="interp2d",
+                 freeze=[0,0,0],observer_transfer_path=None,
                  interp_type="bilinear", pc_initialize="regular"):
         super().__init__()
 
@@ -51,6 +52,26 @@ class obsbot(nn.Module):
         elif predictor_type == "deconv2d":
             hidden_dim = 128
             self.predictor = predictor_deconv(hidden_dim,self.npc)
+
+        # Freeze weights for each type of network
+        if freeze[0] == 1:
+            # Freeze Observer
+            for param in self.observer.parameters():
+                param.requires_grad = False
+        if freeze[1] == 1:
+            # Freeze Policy
+            for param in self.policy.parameters():
+                param.requires_grad = False
+        if freeze[2] == 1:
+            # Freeze Predictor
+            for param in self.predictor.parameters():
+                param.requires_grad = False
+
+        # Use pretrained weights for transfer learning
+        #if observer_transfer_path != None:
+        #    print('loading pretrained model:',observer_transfer_path)
+        #    # Load from state dictionary
+        #    self.observer.load_state_dict(torch.load(observer_transfer_path))
 
     def xy_grid(self,height,width):
         # generate constant xy grid in [0,1] range

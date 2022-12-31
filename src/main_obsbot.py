@@ -69,6 +69,8 @@ if __name__ == '__main__':
                        opt.observer_type,
                        opt.policy_type,
                        opt.predictor_type,
+                       opt.freeze,
+                       opt.observer_transfer_path,
                        opt.interp_type,
                        opt.pc_initialize).to(device)
                        
@@ -129,16 +131,6 @@ if __name__ == '__main__':
                                                    drop_last=True,
                                                    shuffle=False)
             
-        if opt.transfer_path != 'None':
-            # Use pretrained weights for transfer learning
-            print('loading pretrained model:',opt.transfer_path)
-            # ###if the model is pickle
-            #model = torch.load(opt.transfer_path)
-            # ###if the model is state dict
-            model.load_state_dict(torch.load(opt.transfer_path))
-
-            model.model_mode = opt.model_mode
-
         modelinfo.write('Model Structure \n')
         modelinfo.write(str(model))
         count_parameters(model,modelinfo)
