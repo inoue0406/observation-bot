@@ -1,9 +1,9 @@
 #!/bin/bash
 
-case="result_20221230_observer_only"
+case="result_20221231_obsbot_nopolicy"
 
 # Running Obsbot Script
-python ../src/main_obsbot.py --model_name observer\
+python ../src/main_obsbot.py --model_name obsbot\
        --dataset artfield --model_mode run --data_scaling linear\
        --image_size 256 \
        --pc_size 10 --pc_initialize random\
@@ -17,6 +17,7 @@ python ../src/main_obsbot.py --model_name observer\
        --batch_size 8 --n_epochs 300 --n_threads 4 --checkpoint 100 \
        --loss_function MSE \
        --observer_type conv2d --policy_type seq2seq --predictor_type deconv2d \
-       --interp_type nearest_kdtree\
-       --optimizer adam \
-
+       --freeze 0 0 0 \
+       --observer_transfer_path ../run/result_20221228_observer_only/trained_observer.dict \
+       --interp_type nearest_kdtree \
+       --optimizer adam

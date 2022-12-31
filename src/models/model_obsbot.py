@@ -68,10 +68,11 @@ class obsbot(nn.Module):
                 param.requires_grad = False
 
         # Use pretrained weights for transfer learning
-        #if observer_transfer_path != None:
-        #    print('loading pretrained model:',observer_transfer_path)
-        #    # Load from state dictionary
-        #    self.observer.load_state_dict(torch.load(observer_transfer_path))
+        if observer_transfer_path != None:
+            print('loading pretrained model:',observer_transfer_path)
+            # Load from state dictionary
+            import pdb;pdb.set_trace()
+            self.observer.load_state_dict(torch.load(observer_transfer_path))
 
     def xy_grid(self,height,width):
         # generate constant xy grid in [0,1] range

@@ -195,10 +195,12 @@ if __name__ == '__main__':
             # (2) as state dictionary
             if opt.model_name == 'obsbot':
                 model_fname = 'trained_obsbot.dict'
+                torch.save(model.state_dict(),
+                           os.path.join(opt.result_path, model_fname))
             elif  opt.model_name == 'observer':
                 model_fname = 'trained_observer.dict'
-            torch.save(model.state_dict(),
-                       os.path.join(opt.result_path, model_fname))
+                torch.save(model.observer.state_dict(),
+                           os.path.join(opt.result_path, model_fname))
             mlflow.pytorch.log_model(model, artifact_path="Final")
 
     # test datasets if specified
