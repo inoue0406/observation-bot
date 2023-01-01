@@ -4,7 +4,7 @@ import numpy as np
 
 # Import Observer/Policy/Predictor classes.
 from models.observer import observer_interp2d, observer_conv
-from models.policy import policy_lstm
+from models.policy import policy_lstm, policy_nopolicy
 from models.predictor import predictor_interp2d, predictor_deconv
 
 class obsbot(nn.Module):
@@ -46,6 +46,8 @@ class obsbot(nn.Module):
         # Policy Network
         if policy_type == "seq2seq":
             self.policy = policy_lstm(pc_size, self.npc)
+        if policy_type == "nopolicy":
+            self.policy = policy_nopolicy(pc_size)
         # Predictor Network
         if predictor_type == "interp2d":
             self.predictor = predictor_interp2d(interp_type)
@@ -69,9 +71,8 @@ class obsbot(nn.Module):
 
         # Use pretrained weights for transfer learning
         if observer_transfer_path != None:
-            print('loading pretrained model:',observer_transfer_path)
+            print('Loading pretrained model:',observer_transfer_path)
             # Load from state dictionary
-            import pdb;pdb.set_trace()
             self.observer.load_state_dict(torch.load(observer_transfer_path))
 
     def xy_grid(self,height,width):

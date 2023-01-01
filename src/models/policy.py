@@ -10,7 +10,7 @@ import numpy as np
 class policy_lstm(nn.Module):
     """Summary line.
 
-    This type policy (motion estimator) utilizes (non-convolutional) LSTM.
+    This type of policy (motion estimator) utilizes (non-convolutional) LSTM.
     
     """
 
@@ -48,6 +48,32 @@ class policy_lstm(nn.Module):
         XYR_pc = torch.cat([XY_pc,R_pc],dim=1).reshape(bsize,self.npc*3)
         dXY = self.lstm(XYR_pc) * ratio
         XY_pc_nxt = XY_pc + dXY.reshape(bsize,2,self.npc)
+
+        return XY_pc_nxt
+
+class policy_nopolicy(nn.Module):
+    """Summary line.
+
+    No-policy: This policy does not control observer positions.
+    
+    """
+
+    def __init__(self, pc_size):
+        super().__init__()
+
+    def forward(self, XY_pc, R_pc, bsize):
+        """Just pass through the current observer locations as the output.
+
+        Args:
+            XY_pc (torch.Tensor): The 2-d location of observation bots with [batch,2,N] dimensions,
+                                   where N is the number of bots.
+            R_pc (torch.Tensor): Interpolated field value at locations specified by XY_pc with 
+                                  [batch,channels,N] dimensions.
+        Returns:
+            XY_pc (torch.Tensor): The next location of observation bots with [batch,2,N] dimensions.
+
+        """
+        XY_pc_nxt = XY_pc
 
         return XY_pc_nxt
 

@@ -16,8 +16,8 @@ python ../src/main_obsbot.py --model_name obsbot\
        --learning_rate 0.01 --lr_decay 0.9 \
        --batch_size 8 --n_epochs 300 --n_threads 4 --checkpoint 100 \
        --loss_function MSE \
-       --observer_type conv2d --policy_type seq2seq --predictor_type deconv2d \
+       --observer_type conv2d --policy_type nopolicy --predictor_type deconv2d \
        --freeze 0 0 0 \
-       --observer_transfer_path ../run/result_20221228_observer_only/trained_observer.dict \
+       --observer_transfer_path ../run/result_20221230_observer_only/trained_observer.dict \
        --interp_type nearest_kdtree \
        --optimizer adam
