@@ -17,7 +17,13 @@ python ../src/main_obsbot.py --model_name obsbot\
        --batch_size 8 --n_epochs 300 --n_threads 4 --checkpoint 100 \
        --loss_function MSE \
        --observer_type conv2d --policy_type nopolicy --predictor_type deconv2d \
-       --freeze 0 0 0 \
+       --freeze 1 0 0 \
        --observer_transfer_path ../run/result_20221230_observer_only/trained_observer.dict \
        --interp_type nearest_kdtree \
        --optimizer adam
+
+# post plotting
+python ../post/plot_pred_artfield_obsbot.py $case
+# gif animation
+python ../post/gif_animation.py $case
+

@@ -101,6 +101,8 @@ def plot_comp_prediction(case):
                    opt["observer_type"],
                    opt["policy_type"],
                    opt["predictor_type"],
+                   opt["freeze"],
+                   opt["observer_transfer_path"],
                    opt["interp_type"],
                    opt["pc_initialize"]).to(device)
 
