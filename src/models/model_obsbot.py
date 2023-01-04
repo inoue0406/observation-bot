@@ -70,7 +70,7 @@ class obsbot(nn.Module):
                 param.requires_grad = False
 
         # Use pretrained weights for transfer learning
-        if observer_transfer_path != None:
+        if observer_transfer_path != "None":
             print('Loading pretrained model:',observer_transfer_path)
             # Load from state dictionary
             self.observer.load_state_dict(torch.load(observer_transfer_path))
