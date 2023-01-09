@@ -29,8 +29,6 @@ def count_parameters(model,f):
     f.write("Number of params:"+str(Nparam)+", Trainable parameters:"+str(Ntrain)+"\n")
     
 if __name__ == '__main__':
-
-    experiment_id = mlflow.get_experiment_by_name("Obsbot")
    
     # parse command-line options
     opt = parse_opts()
@@ -42,7 +40,10 @@ if __name__ == '__main__':
     with open(os.path.join(opt.result_path, 'opts.json'), 'w') as opt_file:
         opt_file.write(json.dumps(vars(opt), indent=2))
 
-    # generic log file
+    # Tracking by MLFlow
+    experiment_id = mlflow.tracking.MlflowClient().get_experiment_by_name(opt.result_path[0:10])
+    
+    # generic log file  
     logfile = open(os.path.join(opt.result_path, 'log_run.txt'),'w')
     logfile.write('Start time:'+time.ctime()+'\n')
     tstart = time.time()
